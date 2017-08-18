@@ -1,0 +1,51 @@
+{
+  "name": "logger",
+  "private": true,
+  "version": "2.0.0",
+  "description": "A simple Discord bot for logging different events in your Discord server.",
+  "scripts": {
+    "start": "babel-node Logger.js",
+    "start-dev": "nodemon --exec babel-node Logger.js",
+    "test": "standard && eslint **",
+    "make-db": "babel-node databases/makedb.js",
+    "pm2-hotreload": "pm2 stop Logger && git pull && pm2 start Logger",
+    "pm2-prune": "pm2 stop Logger && pm2 reset Logger && pm2 flush && pm2 start Logger",
+    "fullinstall-win": "npm install && scripts\\install_globals_win.bat",
+    "fullinstall-linux": "sudo npm install && cd scripts && sudo chmod 770 ./install_globals_linux.sh && ./install_globals_linux.sh && cd .."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LWTechGaming/Logger.git"
+  },
+  "author": "DevLodge",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/LWTechGaming/Logger/issues"
+  },
+  "homepage": "https://github.com/LWTechGaming/Logger#readme",
+  "dependencies": {
+    "assert": "^1.4.1",
+    "bluebird": "^3.5.0",
+    "discordie": "^0.11.0",
+    "fs": "0.0.1-security",
+    "promise": "^7.1.1",
+    "redis": "^2.7.1",
+    "require-all": "^2.2.0",
+    "rethinkdbdash": "^2.3.29",
+    "sleep": "^5.1.1",
+    "superagent": "^3.5.2",
+    "util": "^0.10.3",
+    "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-preset-es2015": "^6.24.0",
+    "eslint": "^3.19.0",
+    "eslint-config-standard": "^7.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-standard": "^2.1.1",
+    "nodemon": "^1.11.0",
+    "standard": "^9.0.2"
+  }
+}

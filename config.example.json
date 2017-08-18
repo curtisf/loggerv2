@@ -1,0 +1,25 @@
+{
+    "core": {
+        "token": "A Discord bot token",
+        "prefix": "%"
+    },
+    "database": {
+        "user": "admin",
+        "pass": "",
+        "host": "localhost",
+        "port": "28015"
+    },
+    "stats": {
+        "dbots": {
+            "enabled": false,
+            "token": "Discord Bots API token",
+            "bot_id": "Discord Bots bot ID"
+        }
+    },
+    "misc": {
+        "defaultGame": "LoggerV2 | %!setchannel"
+    },
+    "commands": {
+        "eval": ["212445217763229699"]
+    }
+}

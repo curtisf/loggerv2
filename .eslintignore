@@ -1,0 +1,8 @@
+node_modules/*
+rethinkdb_data/*
+*.json
+*.png
+*.log
+*.md
+*.txt
+*.exe

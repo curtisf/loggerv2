@@ -1,0 +1,15 @@
+# Visual Studio Code
+.vscode
+
+# NPM
+node_modules
+*.log
+
+# Configuration
+config.json
+
+# Database
+rethinkdb_data
+
+# Redis memdump
+dump.rdb
