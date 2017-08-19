@@ -34,7 +34,9 @@ bot.Dispatcher.on('DISCONNECTED', () => {
   init()
 })
 
-bot.Dispatcher.onAny(middleware)
+bot.Dispatcher.onAny((type, args) => {
+  middleware(type, args)
+})
 
 function init () {
   if (restarts === 0) {

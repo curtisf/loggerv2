@@ -39,31 +39,81 @@ function handle (type, raw) {
       channelID = raw.channelId
       guildID = raw.data.guild_id
       break
-  }
-  if (guildID && channelID) {
-    Redis.existsAsync(`${guildID}:ignoredChannels`).then((exist) => {
-      if (exist) {
-        Redis.getAsync(`${guildID}:ignoredChannels`).then((channels) => {
-          if (channels.split(', ').indexOf(channelID) === -1) {
-            Redis.existsAsync(`${guildID}:disabledEvents`).then((res) => {
-              if (res) {
-                Redis.getAsync(`${guildID}:disabledEvents`).then((dEvents) => {
-                  if (dEvents.split(', ').map(m => m.toUpperCase()).indexOf(type) === -1) {
-                    try {
-                      dir[type].run(bot, raw, type)
-                    } catch (_) {}
-                  }
-                })
-              } else {
-                loadToRedis(guildID)
-              }
-            })
-          }
-        })
-      } else {
-        loadToRedis(guildID)
+    case 'MESSAGE_REACTION_REMOVE_ALL':
+      channelID = raw.data.channel_id
+      guildID = bot.Channels.get(raw.data.channel_id).guild.id
+      break
+    case 'CHANNEL_CREATE':
+      channelID = raw.channel.id
+      if (raw.channel.guild_id) {
+        guildID = raw.channel.guild_id
       }
-    })
+      break
+    case 'GUILD_UPDATE':
+      guildID = raw.guild.id
+      break
+    case 'GUILD_BAN_ADD':
+      guildID = raw.guild.id
+      break
+    case 'GUILD_BAN_REMOVE':
+      guildID = raw.guild.id
+      break
+    case 'GUILD_MEMBER_ADD':
+      guildID = raw.guild.id
+      break
+    case 'GUILD_MEMBER_REMOVE':
+      guildID = raw.guild.id
+      break
+    case 'GUILD_EMOJIS_UPDATE':
+      guildID = raw.guild.id
+      break
+    case 'GUILD_MEMBER_UPDATE':
+      guildID = raw.guild.id
+      break
+    case 'GUILD_ROLE_DELETE':
+      guildID = raw.guild.id
+      break
+  }
+  if (guildID) {
+    if (channelID) {
+      Redis.existsAsync(`${guildID}:ignoredChannels`).then((exist) => {
+        if (exist) {
+          Redis.getAsync(`${guildID}:ignoredChannels`).then((channels) => {
+            if (channels.split(',').indexOf(channelID) === -1) {
+              Redis.existsAsync(`${guildID}:disabledEvents`).then((res) => {
+                if (res) {
+                  Redis.getAsync(`${guildID}:disabledEvents`).then((dEvents) => {
+                    if (dEvents.split(',').map(m => m.toUpperCase()).indexOf(type) === -1) {
+                      try {
+                        dir[type].run(bot, raw, type)
+                      } catch (_) {}
+                    }
+                  })
+                } else {
+                  loadToRedis(guildID)
+                }
+              })
+            }
+          })
+        } else {
+          loadToRedis(guildID)
+        }
+      })
+    } else {
+      Redis.existsAsync(`${guildID}:disabledEvents`).then((res) => {
+        if (res) {
+          Redis.getAsync(`${guildID}:disabledEvents`).then((dEvents) => {
+            if (dEvents.split(',').map(m => m.toUpperCase()).indexOf(type) === -1) {
+              try {
+                dir[type].run(bot, raw, type)
+              } catch (_) {}
+            }
+          })
+        } else {
+          loadToRedis(guildID)
+        }
+      })
+    }
   } else {
     if (Object.keys(dir).indexOf(type) !== -1) {
       try {

@@ -90,6 +90,7 @@ Commands.setchannel = {
   func: function (msg, suffix, bot) {
     let allowed = checkIfAllowed(msg)
     let botPerms = bot.User.permissionsFor(msg.channel)
+    let loadToRedis = require('../handlers/read').loadToRedis
     if (botPerms.Text.SEND_MESSAGES) {
       if (allowed) {
         require('../handlers/update').updateGuildDocument(msg.guild.id, { // to avoid globally requiring db handler functions
@@ -97,6 +98,7 @@ Commands.setchannel = {
         }).then((r) => {
           if (r === true) {
             msg.reply(`I will now log actions to **${msg.channel.name}**!`)
+            loadToRedis(msg.guild.id)
           } else {
             msg.reply(`An error has occurred while setting the log channel, please try again.`)
             log.error(`Error while setting channel for guild ${msg.guild.name} (${msg.guild.id}).`)
@@ -119,12 +121,14 @@ Commands.clearchannel = {
   desc: 'Use this to clear the logchannel associated with the server.',
   func: function (msg, suffix, bot) {
     let allowed = checkIfAllowed(msg)
+    let loadToRedis = require('../handlers/read').loadToRedis
     if (allowed) {
       require('../handlers/update').updateGuildDocument(msg.guild.id, { // to avoid globally requiring db handler functions
         'logchannel': ''
       }).then((r) => {
         if (r === true) {
           msg.reply(`Log channel wiped!`)
+          loadToRedis(msg.guild.id)
         } else {
           msg.reply(`An error has occurred while clearing the log channel, please try again.`)
           log.error(`Error while  for guild ${msg.guild.name} (${msg.guild.id}).`)
@@ -144,6 +148,7 @@ Commands.ignorechannel = {
     let allowed = checkIfAllowed(msg)
     let getGuildDocument = require('../handlers/read').getGuildDocument // to avoid exposing globally
     let updateGuildDocument = require('../handlers/update').updateGuildDocument
+    let loadToRedis = require('../handlers/read').loadToRedis
     if (allowed) {
       getGuildDocument(msg.guild.id).then((res) => {
         if (res) {
@@ -154,6 +159,7 @@ Commands.ignorechannel = {
             }).then((resp) => {
               if (resp === true) {
                 msg.reply(`I will resume logging events in **${msg.channel.name}**!`)
+                loadToRedis(msg.guild.id)
               } else {
                 msg.reply(`Something went wrong while trying to resume logging to **${msg.channel.name}**, please try again.`)
                 log.error(`Error while removing ${msg.channel.id} from the ignored channel array, guild ID ${msg.guild.id}.`)
@@ -167,6 +173,7 @@ Commands.ignorechannel = {
             }).then((resp) => {
               if (resp === true) {
                 msg.reply(`I will not log events in **${msg.channel.name}** anymore!`)
+                loadToRedis(msg.guild.id)
               } else {
                 msg.reply(`Something went wrong while trying to ignore **${msg.channel.name}**, please try again.`)
                 log.error(`Error while adding ${msg.channel.id} from the ignored channel array, guild ID ${msg.guild.id}.`)
@@ -189,6 +196,7 @@ Commands.togglemodule = {
     let allowed = checkIfAllowed(msg)
     let getGuildDocument = require('../handlers/read').getGuildDocument // to avoid exposing globally
     let updateGuildDocument = require('../handlers/update').updateGuildDocument
+    let loadToRedis = require('../handlers/read').loadToRedis
     if (allowed) {
       if (suffix) {
         if (events.indexOf(suffix.toUpperCase()) !== -1) {
@@ -201,6 +209,7 @@ Commands.togglemodule = {
                 }).then((resp) => {
                   if (resp === true) {
                     msg.reply(`Module **${suffix.toUpperCase()}** has been enabled.`)
+                    loadToRedis(msg.guild.id)
                   } else {
                     msg.reply(`Something went wrong while trying to enable module **${suffix.toUpperCase()}**, please try again.`)
                     log.error(`Error while enabling module ${suffix.toUpperCase()}, guild ID ${msg.guild.id}.`)
@@ -214,6 +223,7 @@ Commands.togglemodule = {
                 }).then((resp) => {
                   if (resp === true) {
                     msg.reply(`Module **${suffix.toUpperCase()}** has been disabled.`)
+                    loadToRedis(msg.guild.id)
                   } else {
                     msg.reply(`Something went wrong while trying to disable module **${suffix.toUpperCase()}**, please try again.`)
                     log.error(`Error while disabling module ${suffix.toUpperCase()}, guild ID ${msg.guild.id}.`)
@@ -227,7 +237,7 @@ Commands.togglemodule = {
           msg.reply('Invalid module! Try using ub!help')
         }
       } else {
-        msg.reply('You didn\'t provide a module name! Try using ub!help.')
+        msg.reply('You didn\'t provide a module name! Try using %help.')
       }
     } else {
       msg.reply(`You can't use this command! Required: **Manage Server** or **Administrator**`)
