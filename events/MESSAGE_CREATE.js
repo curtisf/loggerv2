@@ -32,7 +32,7 @@ module.exports = {
             } else {
               let gd = {}
               for (let key in msg.guild) {
-                gd[key] = key
+                gd[key] = msg.guild[key]
               }
               gd.roles = []
               gd.emojis = []
