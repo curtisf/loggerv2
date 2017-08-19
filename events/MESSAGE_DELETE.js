@@ -1,6 +1,5 @@
 import { badMessageCheck } from '../system/utils'
 import { sendToLog } from '../system/modlog'
-import { getLastByType } from '../handlers/audit'
 
 module.exports = {
   name: 'message_delete',
@@ -13,7 +12,7 @@ module.exports = {
         guildID: msg.guild.id,
         channelID: msg.channel.id,
         type: 'Message Deleted',
-        changed: `► Content: \`${msg.content ? msg.content : 'None.'}\`\n► Channel: **${msg.channel.name}**\n► Message ID: ${msg.id}`,
+        changed: `► Content: \`${msg.content ? msg.content.replace(/\"/g, '"').replace(/`/g, '') : 'None.'}\`\n► Channel: **${msg.channel.name}**\n► Message ID: ${msg.id}`, // eslint-disable-line
         color: 8351671,
         against: {
           id: `${msg.author.id}`,

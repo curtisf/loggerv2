@@ -34,15 +34,15 @@ function addChannelToRedis (guildID, cb) {
           Redis.set(`${guildID}:logchannel`, doc.logchannel.toString()) // no need to expire.
           cb(bot.Channels.get(doc.logchannel))
         } else {
-          cb(false)
+          cb(false) // eslint-disable-line
         }
       } else {
-        cb(false)
+        cb(false) // eslint-disable-line
       }
     } else {
       log.warn(`Missing doc for guild id ${guildID}, recovering.`)
       recoverGuild(guildID)
-      cb(false)
+      cb(false) // eslint-disable-line
     }
   })
 }

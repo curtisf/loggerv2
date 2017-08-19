@@ -1,5 +1,4 @@
 import * as request from 'superagent'
-import { Redis } from '../Logger'
 const Config = require('../config.json')
 
 function getLastByType (guildID, type, num) {

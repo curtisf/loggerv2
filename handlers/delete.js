@@ -1,5 +1,3 @@
-import { bot } from '../Logger'
-import { log } from '../system/log'
 import { r } from '../system/rethinkclient'
 
 function deleteGuildDocument (guildID) {

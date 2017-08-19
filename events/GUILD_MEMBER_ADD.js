@@ -1,5 +1,4 @@
 import { Redis } from '../Logger'
-import { log } from '../system/log'
 import { sendToLog } from '../system/modlog'
 
 module.exports = {

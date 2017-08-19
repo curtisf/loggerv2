@@ -21,9 +21,6 @@ function sendToLog (bot, obj, optGuild, optChannel) {
   } else if (!obj.type) {
     log.warn('Object sent to modlog was missing the type of change!')
   } else {
-    let authorName
-    let authorIcon
-    let thumbnail
     let abstractEmbed = {
       'color': obj.color ? obj.color : 14774795,
       'timestamp': new Date(),

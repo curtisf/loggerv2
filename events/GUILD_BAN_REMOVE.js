@@ -1,4 +1,3 @@
-import { log } from '../system/log'
 import { sendToLog } from '../system/modlog'
 import { getLastByType } from '../handlers/audit'
 

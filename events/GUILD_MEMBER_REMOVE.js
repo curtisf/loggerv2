@@ -1,4 +1,3 @@
-import { log } from '../system/log'
 import { sendToLog } from '../system/modlog'
 
 module.exports = {
@@ -21,7 +20,7 @@ module.exports = {
     }
     if (member !== null) {
       let roles = member.roles.map(r => {
-        return msg.guild.roles.find(role => role.id === r).name
+        return guild.roles.find(role => role.id === r).name
       })
       obj.changed = `► Name: **[\`${data.username}#${data.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${data.avatar}.jpg)** (${member.id})\n► Joined At: **${member.joined_at.substr(0, 10)}**${member.roles.length !== 0 ? `\n► Roles:\n\`\`\`$${roles.join(', ')}\`\`\`` : ''}`
       obj.against = data

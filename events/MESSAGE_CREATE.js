@@ -27,12 +27,20 @@ module.exports = {
         if (Object.keys(Commands).includes(cmd)) {
           try {
             let bp = bot.User.permissionsFor(msg.channel)
-            if (cmd === 'setchannel' && !bp.Text.READ_MESSAGES || !bp.Text.SEND_MESSAGES) {
-              Commands['setchannel'].func(msg, suffix, bot)
-            } else if (!bp.Text.READ_MESSAGES || !bp.Text.SEND_MESSAGES) {
+            if (!bp.Text.READ_MESSAGES || !bp.Text.SEND_MESSAGES) {
                   // Ignore
             } else {
-              log.info(`Command "${cmd}${suffix ? ` ${suffix}` : ''}" from user ${msg.author.username}#${msg.author.discriminator} (Server ID: ${msg.guild.id})`)
+              let gd = {}
+              for (let key in msg.guild) {
+                gd[key] = key
+              }
+              gd.roles = []
+              gd.emojis = []
+              log.info(`Command "${cmd}${suffix ? ` ${suffix}` : ''}" from user ${msg.author.username}#${msg.author.discriminator} (${msg.author.id})\n`, {
+                guild: gd,
+                botID: bot.User.id,
+                cmd: cmd
+              })
               Commands[cmd].func(msg, suffix, bot)
             }
           } catch (err) {

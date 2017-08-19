@@ -28,8 +28,7 @@ module.exports = {
         guildID: after.id,
         type: 'Guild Updated',
         changed: 'Unknown',
-        color: 8351671,
-        against: user
+        color: 8351671
       })
     })
   }

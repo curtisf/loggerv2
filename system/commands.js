@@ -40,7 +40,7 @@ Commands.info = {
       },
       'fields': [{
         'name': 'General Information',
-        'value': `Logger\'s task is to log actions from users to a specified channel. This is accomplished by using **ub!setchannel** in the wanted channel.` // not exposing Config. nope.
+        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **ub!setchannel** in the wanted channel.` // not exposing Config. nope.
       },
       {
         'name': 'Technical Details',
@@ -246,7 +246,7 @@ Commands.lastnames = {
         } else {
           require('../handlers/read').getUserDocument(msg.mentions[0].id).then((doc) => {
             if (doc) {
-              msg.channel.sendMessage(`Previous names: \`\`\`xl\n${doc.names ? doc.names.join(', ') : 'None'}\`\`\``)
+              msg.channel.sendMessage(`Previous names: \`\`\`xl\n${doc.names ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``)
             } else {
               msg.reply(`I have no stored names for **${msg.mentions[0].username}**!`)
             }
@@ -258,7 +258,7 @@ Commands.lastnames = {
         if (member) {
           require('../handlers/read').getUserDocument(member.id).then((doc) => {
             if (doc) {
-              msg.channel.sendMessage(`Previous names: \`\`\`xl\n${doc.names ? doc.names.join(', ') : 'None'}\`\`\``)
+              msg.channel.sendMessage(`Previous names: \`\`\`xl\n${doc.names ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``)
             } else {
               msg.reply(`I have no stored names for **${member.username}**!`)
             }

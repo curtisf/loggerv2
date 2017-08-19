@@ -14,7 +14,7 @@ module.exports = {
           guildID: newMessage.guild.id,
           channelID: newMessage.channel.id,
           type: 'Message Updated',
-          changed: `► Previously: \`${oldMessage}\`\n► Now: \`${newMessage.content}\`\n► From Channel **${newMessage.channel.name}**.\n► Message ID: ${newMessage.id}`,
+          changed: `► Previously: \`${oldMessage.replace(/\"/g, '"').replace(/`/g, '')}\`\n► Now: \`${newMessage.content.replace(/\"/g, '"').replace(/`/g, '')}\`\n► From **${newMessage.channel.name}**.\n► Message ID: ${newMessage.id}`, // eslint-disable-line
           color: 8351671,
           against: {
             id: `${newMessage.author.id}`,

@@ -8,7 +8,6 @@ process.title = 'Logger v2'
 
 const Config = require('./config.json')
 const bot = new Discordie({ autoReconnect: true })
-const dir = require('require-all')(__dirname + '/events')
 bluebird.promisifyAll(redis.RedisClient.prototype)
 bluebird.promisifyAll(redis.Multi.prototype)
 const Redis = redis.createClient()

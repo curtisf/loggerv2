@@ -1,6 +1,6 @@
 import { log } from '../system/log'
 import { r } from '../system/rethinkclient'
-import { createUserDocument, recoverGuild } from './create'
+import { createUserDocument } from './create'
 import { loadToRedis } from './read'
 
 function updateGuildDocument (guildID, toUpdate) {
@@ -65,18 +65,6 @@ function addNewName (userID, nameStr) {
           log.error(res)
         }
       })
-    })
-  })
-}
-
-function getInvites (guildID) {
-  return new Promise((resolve, reject) => {
-    r.db('Logger').table('Guilds').get(guildID).run().then((doc) => {
-      if (doc) {
-        resolve(doc.invites)
-      } else {
-        recoverGuild(guildID)
-      }
     })
   })
 }
