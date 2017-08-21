@@ -47,10 +47,8 @@ function addNewName (userID, nameStr) {
         }
       })
     }).catch(() => {
-      log.warn(`Missing a user document for ${userID}, recovering...`)
       createUserDocument(userID).then((res) => {
         if (res === true) {
-          log.info(`Created user document for ${userID}!`)
           r.db('Logger').table('Users').get(userID).update({'names': [nameStr]}).run().then((response) => {
             if (response.replaced || response.skipped || response.unchanged) {
               resolve(true)
