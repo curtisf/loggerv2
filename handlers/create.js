@@ -23,7 +23,7 @@ function createGuild (guild) {
       log.info(`Created a doc for guild: ${guild.name} (${guild.id}), owned by ${guild.owner.username}#${guild.owner.discriminator} (${guild.owner.id}), with ${guild.members.length} members`)
       guild.getInvites().then((invites) => {
         Redis.set(`${guild.id}:invites`, `${invites.map((inv) => `${inv.code}|${inv.uses}`)}`)
-      })
+      }).catch(() => {})
     } else {
       log.error(`Error while creating a guild doc for guild: ${guild.name} (${guild.id})!\nError:`)
       log.error(r)
