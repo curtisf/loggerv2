@@ -37,11 +37,13 @@ module.exports = {
     } else {
       obj.type += `Updated` // 61
       getLastByType(guild.id, 61, 1).then((log) => {
-        log = log[0]
-        let user = bot.Users.get(log.user_id)
-        obj.changed += `► Emoji: <:${log.changes[0].new_value}:${log.target_id}>\n► Now: **${log.changes[0].new_value}**\n► Previously: **${log.changes[0].old_value}**\n► ID: **${log.target_id}**`
-        obj.from = user
-        sendToLog(bot, obj)
+        if (log) {
+          log = log[0]
+          let user = bot.Users.get(log.user_id)
+          obj.changed += `► Emoji: <:${log.changes[0].new_value}:${log.target_id}>\n► Now: **${log.changes[0].new_value}**\n► Previously: **${log.changes[0].old_value}**\n► ID: **${log.target_id}**`
+          obj.from = user
+          sendToLog(bot, obj)
+        }
       })
     }
   }
