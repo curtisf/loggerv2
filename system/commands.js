@@ -93,18 +93,22 @@ Commands.setchannel = {
     let loadToRedis = require('../handlers/read').loadToRedis
     if (botPerms.Text.SEND_MESSAGES) {
       if (allowed) {
-        require('../handlers/update').updateGuildDocument(msg.guild.id, { // to avoid globally requiring db handler functions
-          'logchannel': msg.channel.id
-        }).then((r) => {
-          if (r === true) {
-            msg.reply(`I will now log actions to **${msg.channel.name}**!`)
-            loadToRedis(msg.guild.id)
-          } else {
-            msg.reply(`An error has occurred while setting the log channel, please try again.`)
-            log.error(`Error while setting channel for guild ${msg.guild.name} (${msg.guild.id}).`)
-            log.error(r)
-          }
-        })
+        if (suffix) {
+          msg.reply('Please use this in the channel that you want me to log to.')
+        } else {
+          require('../handlers/update').updateGuildDocument(msg.guild.id, { // to avoid globally requiring db handler functions
+            'logchannel': msg.channel.id
+          }).then((r) => {
+            if (r === true) {
+              msg.reply(`I will now log actions to **${msg.channel.name}**!`)
+              loadToRedis(msg.guild.id)
+            } else {
+              msg.reply(`An error has occurred while setting the log channel, please try again.`)
+              log.error(`Error while setting channel for guild ${msg.guild.name} (${msg.guild.id}).`)
+              log.error(r)
+            }
+          })
+        }
       } else {
         msg.reply(`You can't use this command! Required: **Manage Server** or **Administrator**`)
       }

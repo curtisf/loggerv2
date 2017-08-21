@@ -9,7 +9,7 @@ module.exports = {
     let newMessage = raw.message
     let oldMessage = raw.message.edits[raw.message.edits.length - 1].content
     if (newMessage && oldMessage && newMessage.edits.length < 3) {
-      if (!newMessage.author.bot && newMessage.author.id !== bot.User.id && !newMessage.channel.isPrivate && !badMessageCheck(newMessage.content)) {
+      if (!newMessage.author.bot && newMessage.author.id !== bot.User.id && !newMessage.channel.isPrivate && !badMessageCheck(newMessage.content) && oldMessage !== newMessage.content) { // added content check due to phantom message_update events
         let obj = {
           guildID: newMessage.guild.id,
           channelID: newMessage.channel.id,

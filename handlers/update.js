@@ -25,11 +25,8 @@ function updateUserDocument (userID, toUpdate) {
         resolve(response)
       }
     }).catch(() => {
-      log.warn(`Missing a user document for ${userID}, recovering...`)
       createUserDocument(userID).then((res) => {
-        if (res === true) {
-          log.info(`Created user document for ${userID}!`)
-        } else {
+        if (res !== true) {
           log.error(res)
         }
       })

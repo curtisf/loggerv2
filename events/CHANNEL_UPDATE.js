@@ -23,32 +23,30 @@ module.exports = {
       })
     } else {
       getLastByType(before.guild_id, 11, 1).then((entryObj) => {
-        let user = bot.Users.get(entryObj[0].user_id)
-        if (arraysEqual(beforeIds, afterIds)) {
-          let objChanges = entryObj[0].changes[0]
-          sendToLog(bot, {
-            guildID: after.guild_id,
-            channelID: after.id,
-            type: 'Channel Updated',
-            changed: `► Changed: **${objChanges.key}**\n► Now: \`${objChanges.new_value ? objChanges.new_value : 'None'}\`\n► Was: \`${objChanges.old_value ? objChanges.old_value : 'None'}\``,
-            color: 8351671,
-            footer: {
-              text: `Updated by ${user.username}#${user.discriminator}`,
-              icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'}`
-            }
-          })
-        } else {
-          sendToLog(bot, {
-            guildID: after.guild_id,
-            channelID: after.id,
-            type: 'Channel Overwrites Modified',
-            changed: `► Name: \`${after.name}\`\n► Changed: **Not Supported**\n► ID: **${after.id}**`,
-            color: 8351671,
-            footer: {
-              text: `Updated by ${user.username}#${user.discriminator}`,
-              icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'}`
-            }
-          })
+        if (entryObj) { // not defined for some reason
+          let user = bot.Users.get(entryObj[0].user_id)
+          if (arraysEqual(beforeIds, afterIds)) {
+            let objChanges = entryObj[0].changes[0]
+            sendToLog(bot, {
+              guildID: after.guild_id,
+              channelID: after.id,
+              type: 'Channel Updated',
+              changed: `► Changed: **${objChanges.key}**\n► Now: \`${objChanges.new_value ? objChanges.new_value : 'None'}\`\n► Was: \`${objChanges.old_value ? objChanges.old_value : 'None'}\``,
+              color: 8351671,
+              footer: {
+                text: `Updated by ${user.username}#${user.discriminator}`,
+                icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'}`
+              }
+            })
+          } else {
+            sendToLog(bot, {
+              guildID: after.guild_id,
+              channelID: after.id,
+              type: 'Channel Overwrites Modified',
+              changed: `► Name: \`${after.name}\`\n► Changed: **Not Supported**\n► ID: **${after.id}**`,
+              color: 8351671 // no footer because of some problems reported by a user.
+            })
+          }
         }
       }).catch((e) => {
         if (e.status !== 403) {

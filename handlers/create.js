@@ -15,7 +15,7 @@ function createGuild (guild) {
   r.db('Logger').table('Guilds').insert({
     'id': guild.id,
     'ignoredChannels': [],
-    'disabledEvents': [],
+    'disabledEvents': ['VOICE_CHANNEL_JOIN', 'VOICE_CHANNEL_LEAVE'],
     'logchannel': '',
     'ownerID': guild.owner.id
   }).run().then((r) => {

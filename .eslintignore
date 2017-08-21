@@ -6,3 +6,4 @@ rethinkdb_data/*
 *.md
 *.txt
 *.exe
+dist/*

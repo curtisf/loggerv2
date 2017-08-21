@@ -80,17 +80,11 @@ function handle (type, raw) {
         if (exist) {
           Redis.getAsync(`${guildID}:ignoredChannels`).then((channels) => {
             if (channels.split(',').indexOf(channelID) === -1) {
-              Redis.existsAsync(`${guildID}:disabledEvents`).then((res) => {
-                if (res) {
-                  Redis.getAsync(`${guildID}:disabledEvents`).then((dEvents) => {
-                    if (dEvents.split(',').map(m => m.toUpperCase()).indexOf(type) === -1) {
-                      try {
-                        dir[type].run(bot, raw, type)
-                      } catch (_) {}
-                    }
-                  })
-                } else {
-                  loadToRedis(guildID)
+              Redis.getAsync(`${guildID}:disabledEvents`).then((dEvents) => {
+                if (dEvents.split(',').map(m => m.toUpperCase()).indexOf(type) === -1) {
+                  try {
+                    dir[type].run(bot, raw, type)
+                  } catch (_) {}
                 }
               })
             }

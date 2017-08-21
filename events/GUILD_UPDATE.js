@@ -18,7 +18,7 @@ module.exports = {
         type: 'Guild Updated',
         changed: `Changed:\n${objChanges.join('\n')}`,
         color: 8351671,
-        against: user
+        from: user
       })
     }).catch((e) => {
       if (e.status !== 403) {

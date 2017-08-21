@@ -13,3 +13,6 @@ rethinkdb_data
 
 # Redis memdump
 dump.rdb
+
+# Compiled Files
+dist

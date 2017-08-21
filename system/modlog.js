@@ -40,7 +40,7 @@ function sendToLog (bot, obj, optGuild, optChannel) {
       ]
     }
     if (obj.from) {
-      abstractEmbed.footer.icon_url = `https://cdn.discordapp.com/avatars/${obj.from.id}/${obj.from.avatar}.png`
+      obj.from.avatar ? abstractEmbed.footer.icon_url = `https://cdn.discordapp.com/avatars/${obj.from.id}/${obj.from.avatar}.png` : abstractEmbed.author.icon_url = `https://cdn.discordapp.com/embed/avatars/${obj.from.discriminator % 5}.png?size=1024`
       abstractEmbed.footer.text = `${obj.from.username}#${obj.from.discriminator}`
     } else {
       abstractEmbed.footer.icon_url = `${bot.User.avatarURL}`
@@ -48,7 +48,7 @@ function sendToLog (bot, obj, optGuild, optChannel) {
     }
     if (obj.against) {
       abstractEmbed.author.name = `${obj.against.username}#${obj.against.discriminator}`
-      obj.against.avatar ? abstractEmbed.author.icon_url = `https://cdn.discordapp.com/avatars/${obj.against.id}/${obj.against.avatar}.png` : abstractEmbed.author.icon_url = 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+      obj.against.avatar ? abstractEmbed.author.icon_url = `https://cdn.discordapp.com/avatars/${obj.against.id}/${obj.against.avatar}.png` : abstractEmbed.author.icon_url = `https://cdn.discordapp.com/embed/avatars/${obj.against.discriminator % 5}.png?size=1024`
       abstractEmbed.thumbnail = {'thumbnail': {'url': `${obj.against.thumbnail}`}}
     }
     if (obj.footer) {
