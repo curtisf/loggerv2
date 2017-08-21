@@ -8,13 +8,6 @@ module.exports = {
     let guild = raw.guild
     if (!raw.becameAvailable) {
       createGuild(guild)
-    } else {
-      log.info(`${guild.name} (${guild.id}) just became available!`)
-      getLogChannel(guild.id).then((lc) => {
-        if (lc) {
-          lc.sendMessage('🎉 Welcome back everyone 🎉').catch(() => {})
-        }
-      })
     }
   }
 }
