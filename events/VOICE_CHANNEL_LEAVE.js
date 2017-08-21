@@ -9,7 +9,7 @@ module.exports = {
     let user = raw.user
     let obj = {
       guildID: raw.guildId,
-      type: 'User Joined Left Channel',
+      type: 'User Left Voice Channel',
       changed: `► User: **${user.username}#${user.discriminator}**\n► User ID: **${user.id}**`,
       color: 8351671,
       against: user

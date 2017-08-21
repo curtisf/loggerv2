@@ -73,6 +73,12 @@ function handle (type, raw) {
     case 'GUILD_ROLE_DELETE':
       guildID = raw.guild.id
       break
+    case 'VOICE_CHANNEL_JOIN':
+      guildID = raw.channel.guild_id
+      break
+    case 'VOICE_CHANNEL_LEAVE':
+      guildID = raw.guildId
+      break
   }
   if (guildID) {
     if (channelID) {
