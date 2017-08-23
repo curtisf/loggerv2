@@ -62,7 +62,7 @@ function handle (type, raw) {
       guildID = raw.guild.id
       break
     case 'GUILD_MEMBER_REMOVE':
-      guildID = raw.guild.id
+      guildID = raw.data.guild_id
       break
     case 'GUILD_EMOJIS_UPDATE':
       guildID = raw.guild.id

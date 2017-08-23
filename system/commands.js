@@ -251,7 +251,7 @@ Commands.togglemodule = {
 
 Commands.lastnames = {
   name: 'lastnames',
-  desc: 'Provide mention(s) or a userid',
+  desc: 'Provide mention(s) or a userid and get lastnames of a user',
   func: function (msg, suffix, bot) {
     if (suffix) {
       if (msg.mentions.length !== 0) {
@@ -295,7 +295,7 @@ Commands.help = {
         cmdArray.push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
       }
     })
-    cmdArray.push(`\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/NaN39J8`)
+    cmdArray.push(`\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
     msg.addReaction('📜').catch(() => {})
     msg.author.openDM().then((DMChannel) => {
       DMChannel.sendMessage(cmdArray.join('')).catch(() => {})
