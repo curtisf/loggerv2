@@ -40,7 +40,7 @@ Commands.info = {
       },
       'fields': [{
         'name': 'General Information',
-        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **ub!setchannel** in the wanted channel.` // not exposing Config. nope.
+        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **%setchannel** in the wanted channel.` // not exposing Config. nope.
       },
       {
         'name': 'Technical Details',
@@ -48,7 +48,7 @@ Commands.info = {
       },
       {
         'name': 'The Authors',
-        'value': 'Logger is developed and maintained by [LWTech#7575](https://github.com/LWTechGaming) and [Piero#2048](https://github.com/caf203). You can contact my maintainers via my [home server](https://discord.gg/dYmudv3).'
+        'value': 'Logger is developed and maintained by [LWTech#7575](https://github.com/LWTechGaming) and [Piero#2048](https://github.com/caf203). You can contact my maintainers via my [home server](https://discord.gg/ed7Gaa3).'
       }]
     }
     msg.channel.sendMessage('', false, info)
@@ -280,6 +280,66 @@ Commands.lastnames = {
         } else {
           msg.reply('The specified ID isn\'t a member of this server!')
         }
+      }
+    }
+  }
+}
+
+Commands.archive = {
+  name: 'archive',
+  desc: 'Gets the last number of messages provided from the channel it is used in. (%archive [1-400])',
+  func: function (msg, suffix, bot) {
+    let request = require('superagent')
+    let splitSuffix = suffix.split(' ')
+    if (!msg.author.permissionsFor(msg.guild).Text.READ_MESSAGE_HISTORY) {
+      msg.reply('You lack the **Read Message History** permission!')
+    } else if (!bot.User.permissionsFor(msg.guild).Text.READ_MESSAGE_HISTORY) {
+      msg.reply('I need the **Read Message History** permission to archive messages!')
+    } else if (!suffix) {
+      msg.reply('You need to provide a number of messages to archive! (1-400)')
+    } else if (isNaN(splitSuffix[0])) {
+      msg.reply('You need to provide a number of messages to archive! (1-400)')
+    } else if (splitSuffix[0] < 1 || splitSuffix[0] > 400) {
+      msg.reply('Invalid number of messages provided, you can use any from 1-400')
+    } else {
+      safeLoop(parseInt(splitSuffix[0]))
+    }
+    let messageArray = []
+
+    function safeLoop (amount) {
+      if (amount !== 0) {
+        if (amount > 100) {
+          msg.channel.fetchMessages(100).then((m) => {
+            messageArray = messageArray.concat(m.messages)
+            amount = amount - 100
+            safeLoop(amount)
+          })
+        } else {
+          msg.channel.fetchMessages(amount).then((m) => {
+            messageArray = messageArray.concat(m.messages)
+            amount = amount - amount
+            safeLoop(amount)
+          })
+        }
+      } else {
+        let messagesString = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`).join('\r\n')
+        request
+      .post(`https://paste.lemonmc.com/api/json/create`)
+      .send({
+        data: messagesString,
+        language: 'text',
+        private: true,
+        title: `${msg.channel.name.substr(0, 20)}`,
+        expire: '21600'
+      })
+      .end((err, res) => {
+        if (!err && res.statusCode === 200 && res.body.result.id) {
+          msg.reply(`**${messageArray.length}** message(s) could be archived. Link: https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash}`)
+        } else {
+          log.error(res.body)
+          msg.reply(`An error occurred while uploading your archived messages, please contact the bot author!`)
+        }
+      })
       }
     }
   }

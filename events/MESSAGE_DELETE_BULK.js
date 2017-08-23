@@ -25,7 +25,7 @@ module.exports = {
           avatar: `${messageArray[0].author.avatar}`
         }
       }
-      messageArray = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Content'}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`)
+      messageArray = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`)
       let messagesString = messageArray.join('\r\n')
       request
       .post(`https://paste.lemonmc.com/api/json/create`)
@@ -33,7 +33,7 @@ module.exports = {
         data: messagesString,
         language: 'text',
         private: true,
-        title: `Messages Deleted from ${channel.name.substr(0, 8)}`,
+        title: `${channel.name.substr(0, 29)}`,
         expire: '21600'
       })
       .end((err, res) => {

@@ -9,7 +9,7 @@ module.exports = {
     let member = raw.getCachedData()
     let data = raw.data.user
     let obj = {
-      guildID: guild.id,
+      guildID: raw.data.guild_id,
       type: 'Member Left Or Was Kicked',
       changed: '',
       color: 8351671,
@@ -22,7 +22,7 @@ module.exports = {
       let roles = member.roles.map(r => {
         return guild.roles.find(role => role.id === r).name
       })
-      obj.changed = `► Name: **[\`${data.username}#${data.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${data.avatar}.jpg)** (${member.id})\n► Joined At: **${member.joined_at.substr(0, 10)}**${member.roles.length !== 0 ? `\n► Roles:\n\`\`\`${roles.join(', ')}\`\`\`` : ''}`
+      obj.changed = `► Name: **[\`${data.username}#${data.discriminator}\`](https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.jpg)** (${data.id})\n► Joined At: **${member.joined_at ? member.joined_at.substr(0, 10) : 'Unknown'}**${member.roles.length !== 0 ? `\n► Roles:\n\`\`\`${roles.join(', ')}\`\`\`` : ''}`
       obj.against = data
     } else {
       if (data.avatar) {
