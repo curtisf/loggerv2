@@ -28,7 +28,7 @@
     "require-all": "^2.2.0",
     "rethinkdbdash": "^2.3.29",
     "sleep": "^5.1.1",
-    "superagent": "^3.5.2",
+    "superagent": "^3.6.0",
     "util": "^0.10.3",
     "winston": "^2.3.1"
   },

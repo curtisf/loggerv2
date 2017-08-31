@@ -3,6 +3,7 @@ import Discordie from 'discordie'
 import { log } from './system/log'
 import redis from 'redis'
 import sleep from 'sleep'
+import * as request from 'superagent'
 
 process.title = 'Logger v2'
 
