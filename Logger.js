@@ -57,7 +57,6 @@ function init () {
 
 function postToDbots (count) {
   if (Config.stats.dbots.enabled === true) {
-    setInterval(_ => {
     request
       .post(`https://bots.discord.pw/api/bots/${Config.stats.dbots.bot_id}/stats`)
       .set(`Authorization`, `${Config.stats.dbots.token}`)
@@ -70,7 +69,6 @@ function postToDbots (count) {
           log.info(`Posted server count to dbots: ${count}`)
         }
       })
-  }, 10800000)
   }
 }
 
