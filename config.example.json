@@ -9,6 +9,9 @@
         "host": "localhost",
         "port": "28015"
     },
+    "permissions": {
+        "eval": ["212445217763229699", "152664793587777537"]
+    },
     "stats": {
         "dbots": {
             "enabled": false,
@@ -17,7 +20,7 @@
         }
     },
     "misc": {
-        "defaultGame": "LoggerV2 | %!setchannel"
+        "defaultGame": "LoggerV2 | %setchannel | http://logger.whatezlife.com"
     },
     "commands": {
         "eval": ["212445217763229699"]

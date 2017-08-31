@@ -27,6 +27,7 @@ bot.Dispatcher.on('GATEWAY_READY', () => {
   }
   bot.Users.fetchMembers().then(() => {
     log.info(`Hello Discord! I'm ${bot.User.username}#${bot.User.discriminator} (${bot.User.id}), in ${bot.Guilds.length} servers with ${bot.Users.length} known members.`)
+    postToDbots(bot.Guilds.length)
   })
 })
 
@@ -50,6 +51,25 @@ function init () {
   } else {
     log.error('Maximum amount of restarts reached, permanently sleeping.')
     sleep.sleep(1000000000000000000000000000000000000) // hopefully we'll be awake by then
+  }
+}
+
+function postToDbots (count) {
+  if (Config.stats.dbots.enabled === true) {
+    setInterval(_ => {
+    request
+      .post(`https://bots.discord.pw/api/bots/${Config.stats.dbots.bot_id}/stats`)
+      .set(`Authorization`, `${Config.stats.dbots.token}`)
+      .send({ "server_count": count }) // eslint-disable-line quotes
+      .end(function (error) {
+        if (error) {
+          log.error('Error while posting server count to dbots!')
+          log.error(error)
+        } else {
+          log.info(`Posted server count to dbots: ${count}`)
+        }
+      })
+  }, 10800000)
   }
 }
 

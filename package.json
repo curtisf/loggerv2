@@ -1,7 +1,7 @@
 {
   "name": "logger",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "A simple Discord bot for logging different events in your Discord server.",
   "scripts": {
     "start": "babel-node Logger.js",
