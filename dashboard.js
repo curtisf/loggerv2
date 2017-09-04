@@ -274,7 +274,7 @@ if (Config.devmode === false) {
     console.log('Logger Dashboard listening at https://whatezlife.com/dashboard/')
   })
 } else {
-  app.listen(8000, function (err) {
+  app.listen(Config.port, function (err) {
     if (err) return console.log(err)
     console.log('Logger Dashboard listening at http://localhost:8000')
   })
