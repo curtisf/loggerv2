@@ -11,6 +11,7 @@ module.exports = {
     let member = raw.member
     if (raw.rolesAdded.length !== 0 || raw.rolesRemoved.length !== 0) {
       getLastByType(guild.id, 25, 1).then((log) => {
+        if (log[0]) {
         if (log[0].changes[0].new_value[0].name !== member.username && member.id === log[0].target_id) {
           log = log[0]
           let user = bot.Users.get(log.user_id)
@@ -33,6 +34,7 @@ module.exports = {
           }
           sendToLog(bot, obj)
         }
+      }
       })
     } else if (changes.before.nick !== changes.after.nick) {
       sendToLog(bot, {

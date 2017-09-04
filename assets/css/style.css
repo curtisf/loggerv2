@@ -4,6 +4,10 @@ border-bottom: 1px solid #ddd;
 font-size: 18px;
 }
 
+.white {
+    color: white;
+}
+
 .center {
     margin: auto;
     width: 25%;
@@ -61,10 +65,24 @@ font-size: 18px;
     background: #23272A
 }
 
-.props{
+.props {
     width:400px;
     height:300px;
     background:#2C2F33;
+    margin:20px auto;
+    border-radius:6px;
+    text-align:center;
+    position:relative;
+    -moz-box-shadow: 0px 0px 28px rgba(0,0,0,.3);
+    -webkit-box-shadow: 0px 0px 28px rgba(0,0,0,.3);
+     box-shadow: 0px 0px 28px rgba(0,0,0,.3);
+     overflow:hidden;
+  }
+
+  .cardpanel {
+    width:500px;
+    height:500px;
+    background:white;
     margin:20px auto;
     border-radius:4px;
     text-align:center;

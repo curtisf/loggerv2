@@ -23,7 +23,7 @@ module.exports = {
       })
     } else {
       getLastByType(before.guild_id, 11, 1).then((entryObj) => {
-        if (entryObj[0].user_id) { // not defined for some reason
+        if (entryObj[0]) { // not defined for some reason
           let user = bot.Users.get(entryObj[0].user_id)
           if (arraysEqual(beforeIds, afterIds)) {
             let objChanges = entryObj[0].changes[0]

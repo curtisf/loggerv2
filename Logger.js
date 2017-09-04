@@ -78,6 +78,7 @@ let processes = []
 if (Config.dev.usedash === true) {
   processes['dashboard'] = {
     process: spawn('node', ['./dashboard.js'], {
+      detached: false,
       stdio: ['inherit', 'inherit', 'inherit', 'ipc']
     })
     .on('message', message => {
@@ -188,5 +189,12 @@ if (Config.dev.usedash === true) {
     })
   }
 }
+
+process.on('exit', function () {
+  Object.keys(processes).forEach((key) => {
+    processes[key].process.kill()
+    console.log(`Killed ${key} due to main process dying.`)
+  })
+})
 
 export { bot, Redis }

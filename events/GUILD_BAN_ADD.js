@@ -9,6 +9,7 @@ module.exports = {
     let banned = raw.user
     let guild = raw.guild
     getLastByType(guild.id, 22, 1).then((entry) => {
+      if (entry[0]) {
       entry = entry[0]
       let user = bot.Users.get(entry.user_id)
       sendToLog(bot, {
@@ -19,6 +20,7 @@ module.exports = {
         against: banned,
         from: user
       })
+    }
     })
   }
 }

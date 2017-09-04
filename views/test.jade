@@ -17,24 +17,26 @@ title Settings for #{guildID}
   .modal-content
     span#close ×
     p Submitted!
-link(href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', rel='stylesheet')
-link(href='/dashboard/css/style.css', rel='stylesheet')
-script(src='/dashboard/js/jquery.min.js')
-h2.text-center Check means <b>enabled</b>.
-br
-form(id="modulesForm", onsubmit="return false").text-center
-    input(type="hidden", name='guildID', value='#{guildID}', readonly)
-    each event in enabled
-        | #{event}:
-        input(type="checkbox", name=`${event}`, checked)= event
-        br
-    each event in disabled
-        | #{event}:
-        input(type="checkbox", name=`${event}`)
-        br
+body.page
+    link(href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', rel='stylesheet')
+    link(href='/dashboard/css/style.css', rel='stylesheet')
+    script(src='/dashboard/js/jquery.min.js')
+    h2.text-center.heading Check means <b>enabled</b>.
     br
-    br
-    button(id="submitB") Submit
+    form(id="modulesForm", onsubmit="return false").text-center.cardpanel
+        p
+        input(type="hidden", name='guildID', value='#{guildID}', readonly)
+        each event in enabled
+            | #{event}:
+            input(type="checkbox", name=`${event}`, checked)= event
+            br
+        each event in disabled
+            | #{event}:
+            input(type="checkbox", name=`${event}`)
+            br
+        br
+        br
+        button(id="submitB") Submit
 
     script.
         let modal = document.getElementById('popup')

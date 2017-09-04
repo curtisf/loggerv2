@@ -15,12 +15,14 @@ module.exports = {
       color: 8351671
     }
     getLastByType(channel.guild_id, 12, 1).then((log) => {
+      if (log[0]) {
       let user = bot.Users.get(log[0].user_id)
       obj.footer = {
         text: `Deleted by ${user.username}#${user.discriminator}`,
         icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'}`
       }
       sendToLog(bot, obj)
+    }
     })
   }
 }
