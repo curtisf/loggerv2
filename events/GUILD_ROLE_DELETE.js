@@ -8,7 +8,7 @@ module.exports = {
   run: function (bot, raw) {
     let guild = raw.guild
     getLastByType(guild.id, 32, 1).then((entry) => {
-      if (entrt[0]) {
+      if (entry[0]) {
       entry = entry[0]
       let user = bot.Users.get(entry.user_id)
       let name = entry.changes.filter(c => c.key === 'name')[0].old_value
