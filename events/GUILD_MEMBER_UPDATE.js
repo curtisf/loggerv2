@@ -9,6 +9,13 @@ module.exports = {
     let changes = raw.getChanges()
     let guild = raw.guild
     let member = raw.member
+    let obj = {
+      guildID: guild.id,
+      type: `Unknown Role Change`,
+      changed: `► Name: **${member.username}#${member.discriminator}**`,
+      color: 8351671,
+      against: member
+    }
     if (raw.rolesAdded.length !== 0 || raw.rolesRemoved.length !== 0) {
       getLastByType(guild.id, 25, 1).then((log) => {
         if (log[0]) {
@@ -21,7 +28,7 @@ module.exports = {
           } else {
             key = 'Removed'
           }
-          let obj = {
+          obj = {
             guildID: guild.id,
             type: `${key} Role`,
             changed: `► Name: **${member.username}#${member.discriminator}**\n► Role ${key}: **${log.changes[0].new_value[0].name}**\n► Role ID: **${log.changes[0].new_value[0].id}**`,
@@ -35,6 +42,12 @@ module.exports = {
           sendToLog(bot, obj)
         }
       }
+      }).catch(() => {
+        obj.footer = {
+          text: 'I cannot view audit logs!',
+          icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+        }
+        sendToLog(bot, obj)
       })
     } else if (changes.before.nick !== changes.after.nick) {
       sendToLog(bot, {

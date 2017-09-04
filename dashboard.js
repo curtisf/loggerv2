@@ -85,6 +85,7 @@ let allEvents = [
 app.get('/modules/:id', checkAuth, function (req, res) {
   if (!isNaN(req.params.id)) {
     let guild = req.user.guilds.filter(guild => guild.id === req.params.id)[0]
+    if (guild) {
     let fullPerms = getPerms(guild.permissions)
     if (fullPerms.General.ADMINISTRATOR || fullPerms.General.MANAGE_GUILD || guild.owner === true) {
       db.getGuild(req.params.id).then((guild) => {
@@ -101,6 +102,9 @@ app.get('/modules/:id', checkAuth, function (req, res) {
     } else {
       res.render('error', {message: 'You lack the permissions to edit this server!'})
     }
+  } else {
+    res.render('error', {message: 'This server doesn\'t exist!'})
+  }
   } else {
     res.render('error', {message: 'Missing or Malformed Server ID'})
   }
@@ -155,7 +159,7 @@ app.get('/channels/:id', checkAuth, function (req, res) {
   }
 })
 
-app.post('/savechannel', function (req, res) {
+app.post('/savechannel', checkAuth, function (req, res) {
   if (!req.body.guildID) {
     console.log('WARNING: Invalid guild to be updated (logchannel) or missing ID entirely.', req.body)
     res.status(400)
@@ -182,7 +186,7 @@ app.post('/savechannel', function (req, res) {
   }
 })
 
-app.post('/submitmodules', function (req, res) {
+app.post('/submitmodules', checkAuth, function (req, res) {
   if (Object.keys(req.body).some((key) => allEvents.indexOf(key) === -1 && key !== 'guildID')) {
     console.log(`Malformed request when submitting modules!`, req.body)
   } else {

@@ -23,6 +23,12 @@ module.exports = {
       }
       sendToLog(bot, obj)
     }
+    }).catch(() => {
+      obj.footer = {
+        text: 'I cannot view audit logs!',
+        icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+      }
+      sendToLog(bot, obj)
     })
   }
 }

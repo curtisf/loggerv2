@@ -26,6 +26,14 @@ module.exports = {
         obj.from = user
         sendToLog(bot, obj)
         }
+      }).catch(() => {
+        obj.type = 'Unknown Emoji Change'
+        obj.changed += 'Unknown'
+        obj.footer = {
+          text: 'I cannot view audit logs!',
+          icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+        }
+        sendToLog(bot, obj)
       })
     } else if (after.length > before.length) {
       obj.type += `Created` // 60
@@ -37,6 +45,14 @@ module.exports = {
         obj.from = user
         sendToLog(bot, obj)
         }
+      }).catch(() => {
+        obj.type = 'Unknown Emoji Change'
+        obj.changed += 'Unknown'
+        obj.footer = {
+          text: 'I cannot view audit logs!',
+          icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+        }
+        sendToLog(bot, obj)
       })
     } else {
       obj.type += `Updated` // 61
@@ -48,6 +64,14 @@ module.exports = {
           obj.from = user
           sendToLog(bot, obj)
         }
+      }).catch(() => {
+        obj.type = 'Unknown Emoji Change'
+        obj.changed += 'Unknown'
+        obj.footer = {
+          text: 'I cannot view audit logs!',
+          icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+        }
+        sendToLog(bot, obj)
       })
     }
   }
