@@ -1,0 +1,32 @@
+title Server Selector
+#nav
+  .navbar.navbar-inverse.navbar-static-top
+    .container
+      a.navbar-brand(href='#')
+        img(src='/dashboard/images/logger.png', width="30", height="30")
+      ul.nav.navbar-nav
+        li
+          a(href='https://whatezlife.com/dashboard/') Home
+        li
+          a(href='serverselector') Server Selector
+        li.navbar-right
+          a(href='logout') Logout
+body.page
+  link(href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', rel='stylesheet')
+  link(href='/dashboard/css/style.css', rel='stylesheet')
+  script(src='/dashboard/js/jquery.min.js')
+
+  h1.text-center.heading Servers you can edit:
+  hr
+  div.text-center
+      - if (canEdit.length !== 0) {
+          each server in canEdit
+              br
+              section.props
+                h2.heading #{server.name}
+                br
+                a(href='https://whatezlife.com/dashboard/modules/' + server.id + '/').text-center.margin-right Modules⁣
+                a(href='http://100.7.41.125:8000/channels/' + server.id + '/').text-center.margin-left Log Channel
+      - } else {
+          h1 None
+      - }

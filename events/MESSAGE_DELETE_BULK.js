@@ -1,5 +1,4 @@
 import * as request from 'superagent'
-import { getLogChannel } from '../handlers/read'
 import { sendToLog } from '../system/modlog'
 import { log } from '../system/log'
 
@@ -38,11 +37,11 @@ module.exports = {
       })
       .end((err, res) => {
         if (!err && res.statusCode === 200 && res.body.result.id) { // weird error reporting system.
-          obj.changed += `\n► [Paste URL](https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash})\n► Message IDs: \`\`\`xl\n${raw.messageIds}\`\`\``
+          obj.changed += `\n► [Paste URL](https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash})\n► Message IDs: \`\`\`xl\n${raw.messageIds.substr(0, 1000)}\`\`\``
           sendToLog(bot, obj)
         } else {
           log.error(err)
-          obj.changed += `\n► Message IDs: \`\`\`xl\n${raw.messageIds}\`\`\``
+          obj.changed += `\n► Message IDs: \`\`\`xl\n${raw.messageIds.substr(0, 1000)}\`\`\``
           sendToLog(bot, obj)
         }
       })

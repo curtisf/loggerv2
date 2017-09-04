@@ -40,7 +40,7 @@ Commands.info = {
       },
       'fields': [{
         'name': 'General Information',
-        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **%setchannel** in the wanted channel.` // not exposing Config. nope.
+        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **%setchannel** in the wanted channel.`
       },
       {
         'name': 'Technical Details',
@@ -355,7 +355,7 @@ Commands.help = {
         cmdArray.push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
       }
     })
-    cmdArray.push(`\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
+    cmdArray.push(`\nNeed an easier way to manage your bot? Check out http://logger.whatezlife.com\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
     msg.addReaction('📜').catch(() => {})
     msg.author.openDM().then((DMChannel) => {
       DMChannel.sendMessage(cmdArray.join('')).catch(() => {})

@@ -1,5 +1,5 @@
 import { log } from '../system/log'
-const Config = require('../config.json')
+const Config = require('../botconfig.json')
 let Commands = require('../system/commands').Commands
 
 module.exports = {

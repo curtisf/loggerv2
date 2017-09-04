@@ -1,4 +1,4 @@
-const Config = require('../config.json')
+const Config = require('../botconfig.json')
 
 function badMessageCheck (content) {
   if (/([\u0900-\u097f]|\uFDFD|\u0BF5|\u0BCC)/.test(content) === true) {

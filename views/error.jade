@@ -1,0 +1,26 @@
+title Error
+#nav
+  .navbar.navbar-inverse.navbar-static-top
+    .container
+      a.navbar-brand(href='#')
+        img(src='/dashboard/images/logger.png', width="30", height="30")
+        ul.nav.navbar-nav
+          li
+            a(href='https://whatezlife.com/dashboard/') Home
+          li
+            a(href='serverselector') Server Selector
+          - if (`${user}` === 'Anonymous') {
+              li.navbar-right
+                a(href='login') Login
+          - } else {
+              li.navbar-right
+                a(href='logout') Logout
+          - }
+
+body.page
+  link(href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css', rel='stylesheet')
+  link(href='/dashboard/css/style.css', rel='stylesheet')
+  script(src='/dashboard/js/jquery.min.js')
+
+  h1.text-center.heading An error has occurred.
+  h2.text-center.heading #{message}

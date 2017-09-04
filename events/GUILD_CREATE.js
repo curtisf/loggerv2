@@ -1,6 +1,4 @@
-import { getLogChannel } from '../handlers/read'
 import { createGuild } from '../handlers/create'
-import { log } from '../system/log'
 
 module.exports = {
   toggleable: false,

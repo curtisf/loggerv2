@@ -1,0 +1,10 @@
+{
+    "devmode": true,
+    "devIP": "your IP",
+    "port": 8000,
+    "sessionSecret": "logger dashboard is wewest lad",
+    "oauth": {
+        "clientID": "",
+        "secret": ""
+    }
+}

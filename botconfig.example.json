@@ -24,5 +24,8 @@
     },
     "commands": {
         "eval": ["212445217763229699"]
+    },
+    "dev": {
+        "usedash": true
     }
 }
