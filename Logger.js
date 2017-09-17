@@ -359,6 +359,23 @@ if (Config.dev.usedash === true) {
               requestedID: message.id
             })
             break
+          case 'getUserPermsGuild':
+            if (bot.guilds.get(message.guildID)) {
+              let guild = bot.guilds.get(message.guildID)
+              let member = guild.members.get(message.userID)
+              processes['dashboard'].process.send({
+                type: 'getUserPermsGuildReply',
+                content: JSON.stringify(member.permission.json, null, '   '),
+                requestedID: message.userID
+              })
+            } else {
+              processes['dashboard'].process.send({
+                type: 'getUserPermsGuildReply',
+                content: JSON.stringify(null, null, '   '),
+                requestedID: message.userID
+              })
+            }
+            break
         }
       }
     })

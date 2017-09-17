@@ -9,7 +9,6 @@ const app = express()
 const path = require('path')
 const bodyParser = require('body-parser')
 const db = require('./db/handler')
-const getPerms = require('./perms')
 const Config = require('./dashconfig.json')
 const botConfig = require('./botconfig.json')
 const redis = require('redis')
@@ -91,22 +90,23 @@ app.get('/modules/:id', checkAuth, function (req, res) {
   if (!isNaN(req.params.id)) {
     let guild = req.user.guilds.filter(guild => guild.id === req.params.id)[0]
     if (guild) {
-      let fullPerms = getPerms(guild.permissions)
-      if (fullPerms.administrator || fullPerms.manageGuild || guild.owner === true) {
-        db.getGuild(req.params.id).then((guild) => {
-          let enabledEvents = allEvents.slice()
-          guild.disabledEvents.forEach((event) => {
-            if (enabledEvents.indexOf(event) !== -1) {
-              enabledEvents.splice(enabledEvents.indexOf(event), 1)
-            }
+      getUserPermsGuild(req.user.id, guild.id).then((fullPerms) => {
+        if (fullPerms.administrator || fullPerms.manageGuild || guild.owner === true) {
+          db.getGuild(req.params.id).then((guild) => {
+            let enabledEvents = allEvents.slice()
+            guild.disabledEvents.forEach((event) => {
+              if (enabledEvents.indexOf(event) !== -1) {
+                enabledEvents.splice(enabledEvents.indexOf(event), 1)
+              }
+            })
+            res.render('test', {guildID: req.params.id, enabled: enabledEvents, disabled: guild.disabledEvents})
+          }).catch(() => {
+            res.render('error', {message: 'This server doesn\'t exist!'})
           })
-          res.render('test', {guildID: req.params.id, enabled: enabledEvents, disabled: guild.disabledEvents})
-        }).catch(() => {
-          res.render('error', {message: 'This server doesn\'t exist!'})
-        })
-      } else {
-        res.render('error', {message: 'You lack the permissions to edit this server!'})
-      }
+        } else {
+          res.render('error', {message: 'You lack the permissions to edit this server!'})
+        }
+      })
     } else {
       res.render('error', {message: 'This server doesn\'t exist!'})
     }
@@ -242,26 +242,32 @@ app.get('/serverselector', checkAuth, function (req, res) {
     safeLoop(userGuilds)
     function safeLoop (guilds) { // eslint-disable-line
       if (guilds.length !== 0) {
-        let userPerms = getPerms(guilds[0].permissions)
-        if (guilds[0].owner || userPerms.administrator || userPerms.manageGuild) {
-          db.guildExists(guilds[0].id).then((exist) => {
-            if (exist) {
-              canEdit.push({
-                id: guilds[0].id,
-                owner: guilds[0].owner,
-                name: guilds[0].name
+        getUserPermsGuild(req.user.id, guilds[0].id).then((userPerms) => {
+          if (userPerms) {
+            if (guilds[0].owner || userPerms.administrator || userPerms.manageGuild) {
+              db.guildExists(guilds[0].id).then((exist) => {
+                if (exist) {
+                  canEdit.push({
+                    id: guilds[0].id,
+                    owner: guilds[0].owner,
+                    name: guilds[0].name
+                  })
+                  guilds.shift()
+                  safeLoop(guilds)
+                } else {
+                  guilds.shift()
+                  safeLoop(guilds)
+                }
               })
-              guilds.shift()
-              safeLoop(guilds)
             } else {
               guilds.shift()
               safeLoop(guilds)
             }
-          })
-        } else {
-          guilds.shift()
-          safeLoop(guilds)
-        }
+          } else {
+            guilds.shift()
+            safeLoop(guilds)
+          }
+        })
       } else {
         res.render('serverselector', {canEdit: canEdit})
       }
@@ -368,6 +374,30 @@ function getBotPerms (type, val) {
         guildID: val
       })
     }
+  })
+}
+
+function getUserPermsGuild (userID, guildID) {
+  return new Promise((resolve, reject) => {
+    let waitFor = function (message) {
+      if (message.type === 'getUserPermsGuildReply' && message.requestedID === userID) {
+        console.log('got my reply', message.content)
+        resolve(JSON.parse(message.content))
+        clearTimeout(timeOut)
+        process.removeListener('message', waitFor)
+      }
+    }
+    process.on('message', waitFor)
+    let timeOut = setTimeout(() => {
+      console.log('timeout removed listener')
+      resolve(null)
+      process.removeListener('message', waitFor)
+    }, 6000)
+    process.send({
+      type: 'getUserPermsGuild',
+      userID: userID,
+      guildID: guildID
+    })
   })
 }
 
