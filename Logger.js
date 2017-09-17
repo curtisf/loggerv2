@@ -12,10 +12,13 @@ const Config = require('./botconfig.json')
 let bot
 if (Config.shardMode === true) {
   bot = new Eris(Config.core.token, {
+    getAllUsers: true,
     maxShards: Config.shardCount
   })
 } else {
-  bot = new Eris(Config.core.token)
+  bot = new Eris(Config.core.token, {
+    getAllUsers: true
+  })
 }
 bluebird.promisifyAll(redis.RedisClient.prototype)
 bluebird.promisifyAll(redis.Multi.prototype)
