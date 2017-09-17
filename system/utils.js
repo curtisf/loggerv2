@@ -66,7 +66,7 @@ function checkIfAllowed (msg) {
   let isDev = checkCanUse(msg.author.id, 'eval')
   if (isDev) {
     return true
-  } else if (msg.author.id === msg.guild.ownerID) {
+  } else if (msg.author.id === msg.channel.guild.ownerID) {
     return true
   } else if (userPerms.administrator || userPerms.manageGuild) {
     return true

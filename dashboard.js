@@ -381,7 +381,6 @@ function getUserPermsGuild (userID, guildID) {
   return new Promise((resolve, reject) => {
     let waitFor = function (message) {
       if (message.type === 'getUserPermsGuildReply' && message.requestedID === userID) {
-        console.log('got my reply', message.content)
         resolve(JSON.parse(message.content))
         clearTimeout(timeOut)
         process.removeListener('message', waitFor)

@@ -6,8 +6,6 @@ module.exports = {
   type: 'messageReactionRemoveAll',
   toggleable: true,
   run: function (bot, message) {
-    console.log(message.reactions)
-    console.log('got request')
     let channel = message.channel
     sendToLog(bot, {
       guildID: channel.guild.id,
