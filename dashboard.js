@@ -85,6 +85,7 @@ let allEvents = [
   'guildMemberUpdate',
   'voiceChannelLeave',
   'voiceChannelJoin',
+  'voiceChannelSwitch',
   'guildEmojisUpdate' ]
 
 app.get('/modules/:id', checkAuth, function (req, res) {
