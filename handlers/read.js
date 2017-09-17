@@ -11,7 +11,10 @@ function getLogChannel (guildID) {
     Redis.existsAsync(`${guildID}:logchannel`).then((res) => {
       if (res) {
         Redis.getAsync(`${guildID}:logchannel`).then((channelID) => {
-          let channel = bot.getChannel(channelID)
+          let channel
+          if (bot.guilds.get(guildID)) {
+            channel = bot.guilds.get(guildID).channels.get(channelID)
+          }
           if (channel) {
             resolve(channel)
           } else {
