@@ -116,7 +116,7 @@ Commands.setchannel = {
           })
         }
       } else {
-        msg.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server** or **Administrator**`)
+        msg.channel.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server** or **Administrator**`)
       }
     } else {
       msg.author.getDMChannel().then((DMChannel) => {
