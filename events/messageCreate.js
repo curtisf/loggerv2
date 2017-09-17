@@ -25,7 +25,7 @@ module.exports = {
 
         if (Object.keys(Commands).includes(cmd)) {
           try {
-            let bp = msg.channel.guild.members.get(msg.author.id).permission.json
+            let bp = msg.channel.guild.members.get(bot.user.id).permission.json
             if (!bp.viewAuditLogs || !bp.sendMessages) {
                   // Ignore
             } else {
