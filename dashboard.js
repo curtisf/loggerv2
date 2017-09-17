@@ -84,6 +84,7 @@ let allEvents = [
   'guildMemberRemove',
   'guildMemberUpdate',
   'voiceChannelLeave',
+  'voiceChannelJoin',
   'guildEmojisUpdate' ]
 
 app.get('/modules/:id', checkAuth, function (req, res) {
@@ -190,7 +191,7 @@ app.post('/savechannel', checkAuth, function (req, res) {
 
 app.post('/submitmodules', checkAuth, function (req, res) {
   if (Object.keys(req.body).some((key) => allEvents.indexOf(key) === -1 && key !== 'guildID')) {
-    console.log(`Malformed request when submitting modules!`, req.body)
+    console.error(`Malformed request when submitting modules!`, req.body)
   } else {
     let disabledEvents = allEvents.slice()
     Object.keys(req.body).filter(k => k !== 'guildID').forEach((key) => {
@@ -385,7 +386,6 @@ function getUserPermsGuild (userID, guildID) {
     }
     process.on('message', waitFor)
     let timeOut = setTimeout(() => {
-      console.log('timeout removed listener')
       resolve(null)
       process.removeListener('message', waitFor)
     }, 6000)
