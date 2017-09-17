@@ -8,7 +8,6 @@ module.exports = {
   toggleable: true,
   run: function (bot, messages) {
     let messageArray = messages
-    console.log(messageArray)
     if (messageArray.length > 1) {
       let channel = bot.guilds.get(messageArray[0].channel.guild.id).channels.get(messageArray[0].channel.id)
       let guild = channel.guild
@@ -25,10 +24,8 @@ module.exports = {
           avatar: `${messageArray[0].author.avatar}`
         }
       }
-      console.log('obj set')
       messageArray = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`)
       let messagesString = messageArray.join('\r\n')
-      console.log('messageArray stuff done')
       request
       .post(`https://paste.lemonmc.com/api/json/create`)
       .send({
@@ -48,7 +45,6 @@ module.exports = {
           sendToLog(bot, obj)
         }
       })
-      console.log('posted????')
     }
   }
 }

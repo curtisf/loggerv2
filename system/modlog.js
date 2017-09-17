@@ -78,12 +78,12 @@ function sendToLog (bot, obj, optGuild, optChannel, fields) {
           if (channel.id !== obj.channelID) {
             channel.createMessage({
               embed: abstractEmbed
-            })
+            }).catch(() => {})
           }
         } else {
           channel.createMessage({
             embed: abstractEmbed
-          })
+          }).catch(() => {})
         }
       }
     })
