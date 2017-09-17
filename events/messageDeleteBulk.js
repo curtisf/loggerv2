@@ -3,13 +3,13 @@ import { sendToLog } from '../system/modlog'
 import { log } from '../system/log'
 
 module.exports = {
-  name: 'message_bulk_delete',
-  type: 'MESSAGE_DELETE_BULK',
+  name: 'messageDeleteBulk',
+  type: 'messageDeleteBulk',
   toggleable: true,
-  run: function (bot, raw) {
-    let messageArray = raw.messages
+  run: function (bot, messages) {
+    let messageArray = messages
     if (messageArray.length > 1) {
-      let channel = bot.Channels.get(messageArray[0].channel_id)
+      let channel = bot.guilds.get(messageArray[0].channel.guild.id).channels.get(messageArray[0].channel.id)
       let guild = channel.guild
       let obj = {
         guildID: guild.id,
@@ -37,11 +37,11 @@ module.exports = {
       })
       .end((err, res) => {
         if (!err && res.statusCode === 200 && res.body.result.id) { // weird error reporting system.
-          obj.changed += `\n► [Paste URL](https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash})\n► Message IDs: \`\`\`xl\n${raw.messageIds}\`\`\``
+          obj.changed += `\n► [Paste URL](https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash})\n► Message IDs: \`\`\`xl\n${messages.map(m => m.id).join(', ').substr(0, 1200)}\`\`\``
           sendToLog(bot, obj)
         } else {
           log.error(err)
-          obj.changed += `\n► Message IDs: \`\`\`xl\n${raw.messageIds}\`\`\``
+          obj.changed += `\n► Message IDs: \`\`\`xl\n${messages.map(m => m.id).join(', ').substr(0, 1200)}\`\`\``
           sendToLog(bot, obj)
         }
       })

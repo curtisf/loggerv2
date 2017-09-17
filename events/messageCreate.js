@@ -4,11 +4,10 @@ let Commands = require('../system/commands').Commands
 
 module.exports = {
   toggleable: false,
-  run: function (bot, raw) {
-    let msg = raw.message
-    if (msg.author.bot || msg.author.id === bot.User.id) {
+  run: function (bot, msg) {
+    if (msg.author.bot || msg.author.id === bot.user.id) {
     // Ignore
-    } else if (msg.channel.isPrivate) {
+    } else if (!msg.channel.guild) {
       if (msg.content.startsWith(Config.core.prefix)) {
         if (msg.content.substring(Config.core.prefix.length).split(' ')[0].toLowerCase() === 'join') {
           Commands.join.func(msg)
@@ -26,20 +25,26 @@ module.exports = {
 
         if (Object.keys(Commands).includes(cmd)) {
           try {
-            let bp = bot.User.permissionsFor(msg.channel)
-            if (!bp.Text.READ_MESSAGES || !bp.Text.SEND_MESSAGES) {
+            let bp = msg.channel.guild.members.get(msg.author.id).permission.json
+            if (!bp.viewAuditLogs || !bp.sendMessages) {
                   // Ignore
             } else {
               let gd = {}
-              for (let key in msg.guild) {
-                gd[key] = msg.guild[key]
+              for (let key in msg.channel.guild) {
+                gd[key] = msg.channel.guild[key]
               }
+              gd.channels = []
+              gd.members = []
               gd.roles = []
               gd.emojis = []
+              gd.defaultChannel = []
+              gd.shard = []
+              gd.toString = 'no.'
               log.info(`Command "${cmd}${suffix ? ` ${suffix}` : ''}" from user ${msg.author.username}#${msg.author.discriminator} (${msg.author.id})\n`, {
                 guild: gd,
-                botID: bot.User.id,
-                cmd: cmd
+                botID: bot.user.id,
+                cmd: cmd,
+                shard: msg.channel.guild.shard.id
               })
               Commands[cmd].func(msg, suffix, bot)
             }

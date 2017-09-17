@@ -1,7 +1,7 @@
 {
   "name": "logger",
   "private": true,
-  "version": "2.2.0",
+  "version": "2.5.0",
   "description": "A simple Discord bot for logging different events in your Discord server.",
   "scripts": {
     "start": "babel-node Logger.js",
@@ -21,11 +21,11 @@
   "dependencies": {
     "assert": "^1.4.1",
     "bluebird": "^3.5.0",
-    "body-parser": "^1.17.2",
+    "body-parser": "^1.18.0",
     "connect-redis": "^3.3.0",
     "cookie-parser": "^1.4.3",
     "cross-spawn": "^5.1.0",
-    "discordie": "^0.11.0",
+    "eris": "github:abalabahaha/eris#dev",
     "express": "^4.15.4",
     "express-session": "^1.15.5",
     "fs": "0.0.1-security",
@@ -35,9 +35,10 @@
     "passport-discord": "^0.1.2",
     "path": "^0.12.7",
     "promise": "^7.1.1",
-    "redis": "^2.7.1",
+    "raven": "^2.1.2",
+    "redis": "^2.8.0",
     "require-all": "^2.2.0",
-    "rethinkdbdash": "^2.3.29",
+    "rethinkdbdash": "^2.3.31",
     "sleep": "^5.1.1",
     "superagent": "^3.6.0",
     "util": "^0.10.3",
@@ -45,14 +46,14 @@
     "winston": "^2.3.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.24.0",
+    "babel-cli": "^6.26.0",
     "babel-preset-es2015": "^6.24.0",
     "eslint": "^3.19.0",
     "eslint-config-standard": "^7.1.0",
     "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-react": "^7.0.0",
+    "eslint-plugin-react": "^7.3.0",
     "eslint-plugin-standard": "^2.1.1",
-    "nodemon": "^1.11.0",
+    "nodemon": "^1.12.0",
     "standard": "^9.0.2"
   },
   "standard": {

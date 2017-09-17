@@ -27,5 +27,10 @@
     },
     "dev": {
         "usedash": true
-    }
+    },
+    "raven": {
+        "url": "xd"
+    },
+    "shardMode": false,
+    "shardCount": 4
 }

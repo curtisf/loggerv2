@@ -1,9 +1,12 @@
 import { bot, Redis } from '../Logger'
 import { log } from '../system/log'
 import { r } from '../system/rethinkclient'
+const Config = require('../botconfig.json')
+const Raven = require('raven')
+Raven.config(Config.raven.url).install()
 
 function recoverGuild (guildID) {
-  let guild = bot.Guilds.get(guildID)
+  let guild = bot.guilds.find(g => g.id === guildID)
   if (guild) {
     createGuild(guild)
   } else {
@@ -15,12 +18,13 @@ function createGuild (guild) {
   r.db('Logger').table('Guilds').insert({
     'id': guild.id,
     'ignoredChannels': [],
-    'disabledEvents': ['VOICE_CHANNEL_JOIN', 'VOICE_CHANNEL_LEAVE'],
+    'disabledEvents': ['voiceChannelJoin', 'voiceChannelLeave', 'voiceChannelSwitch'],
     'logchannel': '',
-    'ownerID': guild.owner.id
+    'ownerID': guild.ownerID
   }).run().then((r) => {
     if (r.inserted) {
-      log.info(`Created a doc for guild: ${guild.name} (${guild.id}), owned by ${guild.owner.username}#${guild.owner.discriminator} (${guild.owner.id}), with ${guild.members.length} members`)
+      let owner = bot.users.find(u => u.id === guild.ownerID)
+      log.info(`Created a doc for guild: ${guild.name} (${guild.id}), owned by ${owner.username}#${owner.discriminator} (${owner.id}), with ${guild.members.size} members`)
       guild.getInvites().then((invites) => {
         Redis.set(`${guild.id}:invites`, `${invites.map((inv) => `${inv.code}|${inv.uses}`)}`)
       }).catch(() => {})
