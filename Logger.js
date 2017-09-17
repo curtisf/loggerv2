@@ -292,7 +292,7 @@ if (Config.dev.usedash === true) {
                 })
                 return
               } else {
-                botPerms = channel.permissionsOf(bot.user.id)
+                botPerms = channel.permissionsOf(bot.user.id).json
               }
             } else {
               let guild = bot.guilds.get(message.guildID)
