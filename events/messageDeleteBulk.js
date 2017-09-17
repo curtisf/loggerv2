@@ -3,13 +3,14 @@ import { sendToLog } from '../system/modlog'
 import { log } from '../system/log'
 
 module.exports = {
-  name: 'message_bulk_delete',
-  type: 'MESSAGE_DELETE_BULK',
+  name: 'messageDeleteBulk',
+  type: 'messageDeleteBulk',
   toggleable: true,
-  run: function (bot, raw) {
-    let messageArray = raw.messages
+  run: function (bot, messages) {
+    let messageArray = messages
+    console.log(messageArray)
     if (messageArray.length > 1) {
-      let channel = bot.Channels.get(messageArray[0].channel_id)
+      let channel = bot.guilds.get(messageArray[0].channel.guild.id).channels.get(messageArray[0].channel.id)
       let guild = channel.guild
       let obj = {
         guildID: guild.id,
@@ -24,8 +25,10 @@ module.exports = {
           avatar: `${messageArray[0].author.avatar}`
         }
       }
+      console.log('obj set')
       messageArray = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`)
       let messagesString = messageArray.join('\r\n')
+      console.log('messageArray stuff done')
       request
       .post(`https://paste.lemonmc.com/api/json/create`)
       .send({
@@ -37,14 +40,15 @@ module.exports = {
       })
       .end((err, res) => {
         if (!err && res.statusCode === 200 && res.body.result.id) { // weird error reporting system.
-          obj.changed += `\n► [Paste URL](https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash})\n► Message IDs: \`\`\`xl\n${raw.messageIds}\`\`\``
+          obj.changed += `\n► [Paste URL](https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash})\n► Message IDs: \`\`\`xl\n${messages.map(m => m.id).join(', ').substr(0, 1200)}\`\`\``
           sendToLog(bot, obj)
         } else {
           log.error(err)
-          obj.changed += `\n► Message IDs: \`\`\`xl\n${raw.messageIds}\`\`\``
+          obj.changed += `\n► Message IDs: \`\`\`xl\n${messages.map(m => m.id).join(', ').substr(0, 1200)}\`\`\``
           sendToLog(bot, obj)
         }
       })
+      console.log('posted????')
     }
   }
 }

@@ -1,9 +1,8 @@
 import { sendToLog } from '../system/modlog'
-import { getLastByType } from '../handlers/audit'
 
 module.exports = {
-  name: 'user_banned',
-  type: 'GUILD_BAN_ADD',
+  name: 'guildBanAdd',
+  type: 'guildBanAdd',
   toggleable: true,
   run: function (bot, raw) {
     let banned = raw.user
@@ -13,22 +12,19 @@ module.exports = {
       type: 'Member Banned',
       changed: `► Name: **${banned.username}#${banned.discriminator}**\n► ID: **${banned.id}**`,
       color: 8351671,
-      against: banned,
+      against: banned
     }
-    getLastByType(guild.id, 22, 1).then((entry) => {
-      if (entry[0]) {
-      entry = entry[0]
-      let user = bot.Users.get(entry.user_id)
+    guild.getAuditLogs(1, null, 22).then((entry) => {
+      let user = entry.users[0]
       obj = {
         guildID: guild.id,
         type: 'Member Banned',
-        changed: `► Name: **${banned.username}#${banned.discriminator}**\n► ID: **${banned.id}**${entry.reason ? `\n► Reason: \`${entry.reason}\`` : ''}`,
+        changed: `► Name: \`${banned.username}#${banned.discriminator}\`\n► ID: **${banned.id}**${entry.entries[0].reason ? `\n► Reason: \`${entry.entries[0].reason}\`` : ''}`,
         color: 8351671,
         against: banned,
         from: user
       }
       sendToLog(bot, obj)
-    }
     }).catch(() => {
       obj.footer = {
         text: 'I cannot view audit logs!',

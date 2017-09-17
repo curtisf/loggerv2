@@ -1,32 +1,30 @@
 import { sendToLog } from '../system/modlog'
-import { getLastByType } from '../handlers/audit'
 
 module.exports = {
-  name: 'role_deleted',
-  type: 'GUILD_ROLE_DELETE',
+  name: 'guildBanRemove',
+  type: 'guildBanRemove',
   toggleable: true,
   run: function (bot, raw) {
+    let unbanned = raw.user
     let guild = raw.guild
     let obj = {
       guildID: guild.id,
-      type: 'Role Deleted',
-      changed: `► ID: **${raw.roleId}**`,
-      color: 8351671
+      type: 'Member Unbanned',
+      changed: `► Name: **${unbanned.username}#${unbanned.discriminator}**\n► ID: **${unbanned.id}**`,
+      color: 8351671,
+      against: unbanned
     }
-    getLastByType(guild.id, 32, 1).then((entry) => {
-      if (entry[0]) {
-      entry = entry[0]
-      let user = bot.Users.get(entry.user_id)
-      let name = entry.changes.filter(c => c.key === 'name')[0].old_value
+    guild.getAuditLogs(1, null, 23).then((entry) => {
+      let user = entry.users[1]
       obj = {
         guildID: guild.id,
-        type: 'Role Deleted',
-        changed: `► Name: **${name}**\n► ID: **${raw.roleId}**`,
+        type: 'Member Unbanned',
+        changed: `► Name: \`${unbanned.username}#${unbanned.discriminator}\`\n► ID: **${unbanned.id}**`,
         color: 8351671,
+        against: unbanned,
         from: user
       }
       sendToLog(bot, obj)
-    }
     }).catch(() => {
       obj.footer = {
         text: 'I cannot view audit logs!',

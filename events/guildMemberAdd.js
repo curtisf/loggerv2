@@ -2,8 +2,8 @@ import { Redis } from '../Logger'
 import { sendToLog } from '../system/modlog'
 
 module.exports = {
-  name: 'member_join',
-  type: 'GUILD_MEMBER_ADD',
+  name: 'guildMemberAdd',
+  type: 'guildMemberAdd',
   toggleable: true,
   run: function (bot, raw) {
     let guild = raw.guild
@@ -12,19 +12,19 @@ module.exports = {
       let obj = {
         guildID: guild.id,
         type: 'Member Joined',
-        changed: `► Name: **[\`${member.username}#${member.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${member.avatar}.jpg)** (${member.id})\n► Account Age: **${Math.floor((new Date() - member.registeredAt) / 86400000)}** days\n► Joined At: **${member.joined_at.substr(0, 10)}**`,
+        changed: `► Name: **[\`${member.username}#${member.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${member.avatar}.jpg)** (${member.id})\n► Account Age: **${Math.floor((new Date() - member.user.createdAt) / 86400000)}** days\n► Joined At: **${new Date(member.joinedAt).toString().substr(0, 21)}**${member.bot ? '\n► Joined via OAuth invite.' : ''}`,
         color: 8351671,
         against: member
       }
       let lastJoin = `${new Date().getTime()}` // automatic stringify
       guild.getInvites().then((invites) => {
-        let currentInvites = invites.map((inv) => `${inv.code}|${inv.uses}`)
+        let currentInvites = invites.map((inv) => `${inv.code}|${inv.uses ? inv.uses : 'Infinite'}`)
         Redis.existsAsync(`${guild.id}:invites`).then((response) => {
           if (response) {
             Redis.getAsync(`${guild.id}:invites`).then((r) => {
               r = r.split(',')
               if (r === currentInvites) {
-                if (Array.from(guild.features).includes('VANITY_URL')) {
+                if (guild.features.includes('VANITY_URL')) {
                   obj.changed += `\n► Joined using Vanity URL`
                   Redis.existsAsync(`${guild.id}:lastJoin`).then((res) => {
                     if (res) {
@@ -45,7 +45,6 @@ module.exports = {
                     }
                   })
                 } else {
-                  obj.changed += `\n► Joined via OAUTH flow.`
                   sendToLog(bot, obj)
                   Redis.del(`${guild.id}:invites`)
                   Redis.set(`${guild.id}:lastJoin`, lastJoin)
@@ -57,7 +56,9 @@ module.exports = {
                   let split = used.split('|')
                   let code = split[0]
                   let uses = split[1]
-                  obj.changed += `\n► Using Invite: **${code}**, with **${uses}** use(s)`
+                  if (!member.bot) {
+                    obj.changed += `\n► Using Invite: **${code}**, with **${uses}** use(s)`
+                  }
                   Redis.existsAsync(`${guild.id}:lastJoin`).then((res) => {
                     if (res) {
                       Redis.getAsync(`${guild.id}:lastJoin`).then((lastTime) => {

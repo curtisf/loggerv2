@@ -2,6 +2,9 @@ import { log } from '../system/log'
 import { r } from '../system/rethinkclient'
 import { createUserDocument } from './create'
 import { loadToRedis } from './read'
+const Config = require('../botconfig.json')
+const Raven = require('raven')
+Raven.config(Config.raven.url).install()
 
 function updateGuildDocument (guildID, toUpdate) {
   return new Promise((resolve, reject) => {

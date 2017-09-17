@@ -11,9 +11,13 @@ const bodyParser = require('body-parser')
 const db = require('./db/handler')
 const getPerms = require('./perms')
 const Config = require('./dashconfig.json')
+const botConfig = require('./botconfig.json')
 const redis = require('redis')
 const RedisStore = require('connect-redis')(session)
 const client = redis.createClient()
+const superagent = require('superagent')
+const Raven = require('raven')
+Raven.config(botConfig.raven.url).install()
 
 if (!process.send) {
   console.log('WARNING: This process was launched separately from the bot, IPC will not work!')
@@ -46,7 +50,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(session({
   secret: Config.sessionSecret,
   // create new redis store.
-  store: new RedisStore({ host: 'localhost', port: 6379, client: client, ttl: 60000 }),
+  store: new RedisStore({ host: 'localhost', port: 6379, client: client, ttl: 600000 }),
   saveUninitialized: false,
   resave: false
 }))
@@ -64,47 +68,48 @@ app.set('view engine', 'jade')
 app.locals.basedir = path.join(__dirname, 'views')
 
 let allEvents = [
-  'CHANNEL_CREATE',
-  'CHANNEL_DELETE',
-  'CHANNEL_UPDATE',
-  'GUILD_BAN_ADD',
-  'GUILD_BAN_REMOVE',
-  'GUILD_EMOJIS_UPDATE',
-  'GUILD_MEMBER_ADD',
-  'GUILD_MEMBER_REMOVE',
-  'GUILD_MEMBER_UPDATE',
-  'GUILD_ROLE_DELETE',
-  'GUILD_UPDATE',
-  'MESSAGE_DELETE',
-  'MESSAGE_DELETE_BULK',
-  'MESSAGE_REACTION_REMOVE_ALL',
-  'MESSAGE_UPDATE',
-  'VOICE_CHANNEL_JOIN',
-  'VOICE_CHANNEL_LEAVE' ]
+  'channelCreate',
+  'channelUpdate',
+  'channelDelete',
+  'guildBanAdd',
+  'guildBanRemove',
+  'guildRoleCreate',
+  'guildRoleDelete',
+  'guildRoleUpdate',
+  'guildUpdate',
+  'messageDelete',
+  'messageDeleteBulk',
+  'messageReactionRemoveAll',
+  'messageUpdate',
+  'guildMemberAdd',
+  'guildMemberRemove',
+  'guildMemberUpdate',
+  'voiceChannelLeave',
+  'guildEmojisUpdate' ]
 
 app.get('/modules/:id', checkAuth, function (req, res) {
   if (!isNaN(req.params.id)) {
     let guild = req.user.guilds.filter(guild => guild.id === req.params.id)[0]
     if (guild) {
-    let fullPerms = getPerms(guild.permissions)
-    if (fullPerms.General.ADMINISTRATOR || fullPerms.General.MANAGE_GUILD || guild.owner === true) {
-      db.getGuild(req.params.id).then((guild) => {
-        let enabledEvents = allEvents.slice()
-        guild.disabledEvents.forEach((event) => {
-          if (enabledEvents.indexOf(event) !== -1) {
-            enabledEvents.splice(enabledEvents.indexOf(event), 1)
-          }
+      let fullPerms = getPerms(guild.permissions)
+      if (fullPerms.administrator || fullPerms.manageGuild || guild.owner === true) {
+        db.getGuild(req.params.id).then((guild) => {
+          let enabledEvents = allEvents.slice()
+          guild.disabledEvents.forEach((event) => {
+            if (enabledEvents.indexOf(event) !== -1) {
+              enabledEvents.splice(enabledEvents.indexOf(event), 1)
+            }
+          })
+          res.render('test', {guildID: req.params.id, enabled: enabledEvents, disabled: guild.disabledEvents})
+        }).catch(() => {
+          res.render('error', {message: 'This server doesn\'t exist!'})
         })
-        res.render('test', {guildID: req.params.id, enabled: enabledEvents, disabled: guild.disabledEvents})
-      }).catch(() => {
-        res.render('error', {message: 'This server doesn\'t exist!'})
-      })
+      } else {
+        res.render('error', {message: 'You lack the permissions to edit this server!'})
+      }
     } else {
-      res.render('error', {message: 'You lack the permissions to edit this server!'})
+      res.render('error', {message: 'This server doesn\'t exist!'})
     }
-  } else {
-    res.render('error', {message: 'This server doesn\'t exist!'})
-  }
   } else {
     res.render('error', {message: 'Missing or Malformed Server ID'})
   }
@@ -114,7 +119,7 @@ app.get('/channels/:id', checkAuth, function (req, res) {
   if (req.params.id) {
     getUserPerms(req.user.id, 'guild', req.params.id).then((perms) => {
       if (perms) {
-        if (perms.General.ADMINISTRATOR || perms.General.MANAGE_GUILD) {
+        if (perms.administrator || perms.manageGuild) {
           getChannels(req.params.id).then((channels) => {
             if (channels) {
               let objs = []
@@ -166,7 +171,7 @@ app.post('/savechannel', checkAuth, function (req, res) {
   } else {
     getBotPerms('channel', req.body.channelSelector).then((perms) => {
       if (perms) {
-        if (perms.Text.READ_MESSAGES || perms.Text.SEND_MESSAGES) {
+        if (perms.readMessages || perms.sendMessages) {
         // res.status(200)
           db.updateGuild(req.body.guildID, {
             'logchannel': req.body.channelSelector
@@ -197,13 +202,26 @@ app.post('/submitmodules', checkAuth, function (req, res) {
     db.updateGuild(req.body.guildID, {'disabledEvents': disabledEvents}).catch((e) => {
       console.log(e)
     })
-    console.log(`Final: ${disabledEvents}`)
   }
 })
 
 app.get('/login', passport.authenticate('discord', { scope: scopes }), function (req, res) {})
 app.get('/callback',
     passport.authenticate('discord', { failureRedirect: '/' }), function (req, res) {
+      superagent
+      .post(Config.webhookURL)
+      .send({embeds: [{
+        title: 'User Logged In',
+        description: `${req.user.username}#${req.user.discriminator} (${req.user.id}) logged in.`,
+        timestamp: new Date(),
+        color: 6918075,
+        image: {
+          url: req.user.avatar ? `https://cdn.discordapp.com/avatars/${req.user.id}/${req.user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${req.user.discriminator % 5}.png`
+        }
+      }]})
+      .end((err, res) => {
+        if (err) return console.error(err)
+      })
       Config.devmode === true ? res.redirect('/') : res.redirect('/dashboard/')
     })
 app.get('/logout', function (req, res) {
@@ -212,7 +230,6 @@ app.get('/logout', function (req, res) {
 })
 app.get('/', function (req, res) {
   if (req.user) {
-    console.log(`${req.user.username} just logged in.`)
     res.render('index', {user: req.user.username})
   } else {
     res.render('index', {user: 'Anonymous'})
@@ -226,7 +243,7 @@ app.get('/serverselector', checkAuth, function (req, res) {
     function safeLoop (guilds) { // eslint-disable-line
       if (guilds.length !== 0) {
         let userPerms = getPerms(guilds[0].permissions)
-        if (guilds[0].owner || userPerms.General.ADMINISTRATOR || userPerms.General.MANAGE_GUILD) {
+        if (guilds[0].owner || userPerms.administrator || userPerms.manageGuild) {
           db.guildExists(guilds[0].id).then((exist) => {
             if (exist) {
               canEdit.push({
@@ -284,7 +301,7 @@ if (Config.devmode === false) {
   })
 }
 
-function getUserById (id) {
+function getUserById (id) { // eslint-disable-line
   return new Promise((resolve, reject) => {
     let waitFor = function (message) {
       if (message.type === 'getUserReply' && message.requestedID === id) {
