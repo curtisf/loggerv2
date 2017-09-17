@@ -39,6 +39,7 @@ module.exports = {
               gd.emojis = []
               gd.defaultChannel = []
               gd.shard = []
+              gd.toString = 'no.'
               log.info(`Command "${cmd}${suffix ? ` ${suffix}` : ''}" from user ${msg.author.username}#${msg.author.discriminator} (${msg.author.id})\n`, {
                 guild: gd,
                 botID: bot.user.id,

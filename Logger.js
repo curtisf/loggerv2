@@ -46,7 +46,7 @@ bot.on('disconnect', () => {
 })
 
 bot.on('error', (e) => {
-  log.error(`Shard encountered an error!`, e)
+  log.error('Shard encountered an error!', e)
 })
 
 function init () {
