@@ -124,10 +124,7 @@ app.get('/channels/:id', checkAuth, function (req, res) {
             if (channels) {
               let objs = []
               channels.forEach((ch) => {
-                objs.push({
-                  name: ch.name,
-                  id: ch.id
-                })
+                objs.push(ch)
               })
               db.getGuild(req.params.id).then((doc) => {
                 if (doc.logchannel) {
@@ -178,7 +175,7 @@ app.post('/savechannel', checkAuth, function (req, res) {
           }).then((rep) => {
             res.status(200).send('Set channel') // no need to check for other values as the promise will get rejected if something goes wrong
           }).catch((e) => {
-            console.log(e)
+            console.error(e)
             res.status(500).send('Internal error')
           })
         } else {

@@ -271,7 +271,12 @@ if (Config.dev.usedash === true) {
           case 'getChannels':
             processes['dashboard'].process.send({
               type: 'getChannelsReply',
-              content: JSON.stringify(bot.guilds.get(message.id).channels.filter(c => c.type === 0), null, '   '),
+              content: JSON.stringify(bot.guilds.get(message.id).channels.filter(c => c.type === 0).map(c => {
+                return {
+                  name: c.name,
+                  id: c.id
+                }
+              })),
               requestedID: message.id
             })
             break
@@ -355,7 +360,7 @@ if (Config.dev.usedash === true) {
             let channel = bot.getChannel(message.id)
             processes['dashboard'].process.send({
               type: 'getChannelInfoReply',
-              content: JSON.stringify(channel, null, '  '),
+              content: JSON.stringify({name: channel.name, id: channel.id}, null, '  '),
               requestedID: message.id
             })
             break
