@@ -30,7 +30,7 @@ module.exports = {
           from: log.users[0]
         }, null, null, fields)
       }
-    })
+    }).catch(() => {})
     function handle (name, log) {
       let after = 'None'
       let before = 'None'

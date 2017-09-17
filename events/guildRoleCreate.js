@@ -22,6 +22,6 @@ module.exports = {
         obj.from = log.users[0]
       }
       sendToLog(bot, obj)
-    })
+    }).catch(() => {})
   }
 }

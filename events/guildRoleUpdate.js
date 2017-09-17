@@ -27,6 +27,6 @@ module.exports = {
         color: newRole.color,
         from: log.users[0]
       }, null, null, fields)
-    })
+    }).catch(() => {})
   }
 }
