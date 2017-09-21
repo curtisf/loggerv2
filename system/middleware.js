@@ -58,6 +58,8 @@ function handle (type, data, guildID, channelID) {
 if (Config.datadog.use) {
   setInterval(() => {
     Dog.incrementBy('total_events.int', total)
+    Dog.gauge('total_users', bot.users.size)
+    Dog.gauge('bot_uptime', bot.uptime)
     total = 0
   }, 15000)
 }
