@@ -151,6 +151,30 @@ Commands.clearchannel = {
   }
 }
 
+Commands.recache = {
+  name: 'recache',
+  desc: 'Use this to recache the guild in Redis',
+  hidden: true,
+  func: function (msg, suffix, bot) {
+    let loadToRedis = require('../handlers/read').loadToRedis
+    if (checkCanUse(msg.author.id, 'eval')) {
+      if (bot.guilds.find(g => g.id === suffix)) {
+        try {
+          loadToRedis(suffix)
+          msg.addReaction('👌')
+        } catch (e) {
+          msg.channel.createMessage('Failed')
+          msg.author.getDMChannel().then((c) => {
+            c.createMessage(JSON.stringify(e))
+          })
+        }
+      } else {
+        msg.addReaction('❌')
+      }
+    }
+  }
+}
+
 Commands.ignorechannel = {
   name: 'ignorechannel',
   desc: 'Use this in a channel you want to ignore.',

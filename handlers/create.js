@@ -29,8 +29,14 @@ function createGuild (guild) {
         Redis.set(`${guild.id}:invites`, `${invites.map((inv) => `${inv.code}|${inv.uses}`)}`)
       }).catch(() => {})
     } else {
-      log.error(`Error while creating a guild doc for guild: ${guild.name} (${guild.id})!\nError:`)
-      log.error(r)
+      if (!r.first_error.startsWith('Duplicate')) {
+        log.error(`Error while creating a guild doc for guild: ${guild.name} (${guild.id})!\nError:`)
+        log.error(r)
+      }
+    }
+  }).catch((e) => {
+    if (!e.first_error.startsWith('Duplicate')) {
+      log.error(e)
     }
   })
 }

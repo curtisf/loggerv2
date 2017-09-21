@@ -18,14 +18,29 @@ module.exports = {
     }
     if (member.roles.length !== oldMember.roles.length) {
       guild.getAuditLogs(1, null, 25).then((log) => {
-        let role
-        if (member.roles.length > oldMember.roles.length) {
-          role = guild.roles.find(r => r.id === member.roles[member.roles.length - 1])
+        log.entries[0].guild = []
+        let user
+        if (log.users.length === 1) {
+          user = log.users[0]
         } else {
-          role = guild.roles.find(r => r.id === oldMember.roles[oldMember.roles.length - 1])
+          user = log.users.filter(u => u.id !== member.id)[0] // order provided isn't always consistent
         }
-        let user = log.users[1] || log.users[0]
         let key = Object.keys(log.entries[0].after)[0]
+        let role
+        if (oldMember.roles.length > member.roles.length) {
+          oldMember.roles.forEach((r, index) => {
+            if (member.roles.indexOf(r) === -1) {
+              role = r
+            }
+          })
+        } else {
+          member.roles.forEach((r, index) => {
+            if (oldMember.roles.indexOf(r) === -1) {
+              role = r
+            }
+          })
+        }
+        role = guild.roles.get(role)
         if (key === '$add') {
           key = 'Added'
         } else {

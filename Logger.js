@@ -25,6 +25,11 @@ bluebird.promisifyAll(redis.Multi.prototype)
 const Redis = redis.createClient()
 const middleware = require('./system/middleware').handle
 const Raven = require('raven')
+const StatsD = require('node-dogstatsd').StatsD
+let Dog
+if (Config.datadog.use) {
+  Dog = new StatsD('localhost', 8125)
+}
 Raven.config(Config.raven.url).install()
 
 let restarts = 0
@@ -105,6 +110,7 @@ bot.on('guildBanRemove', (guild, user) => {
 
 bot.on('guildCreate', (guild) => {
   if (guild.memberCount > 5) {
+    Dog.gauge('total_bot_guilds.int', bot.guilds.size)
     middleware('guildCreate', guild)
   } else {
     guild.leave()
@@ -112,6 +118,7 @@ bot.on('guildCreate', (guild) => {
 })
 
 bot.on('guildDelete', (guild) => {
+  Dog.gauge('total_bot_guilds.int', bot.guilds.size)
   middleware('guildDelete', guild)
 })
 
@@ -394,4 +401,4 @@ process.on('exit', function () {
   })
 })
 
-export { bot, Redis }
+export { bot, Redis, Dog }

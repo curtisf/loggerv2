@@ -32,8 +32,7 @@ module.exports = {
               avatar: `${msg.author.avatar}`
             }
           })
-        }
-        if (Object.keys(msg.embeds[0]).length !== 0) {
+        } else if (msg.embeds.length !== 0) {
           sendToLog(bot, {
             guildID: msg.channel.guild.id,
             channelID: msg.channel.id,

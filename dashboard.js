@@ -15,6 +15,7 @@ const redis = require('redis')
 const RedisStore = require('connect-redis')(session)
 const client = redis.createClient()
 const superagent = require('superagent')
+const helmet = require('helmet')
 const Raven = require('raven')
 Raven.config(botConfig.raven.url).install()
 
@@ -42,6 +43,7 @@ passport.use(new Strategy({
   })
 }))
 
+app.use(helmet())
 app.use(express.static('assets'))
 app.use(cookieParser())
 app.use(bodyParser.json())

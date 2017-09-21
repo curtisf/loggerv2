@@ -19,6 +19,9 @@
             "bot_id": "Discord Bots bot ID"
         }
     },
+    "datadog": {
+        "use": false
+    },
     "misc": {
         "defaultGame": "LoggerV2 | %setchannel | http://logger.whatezlife.com"
     },
@@ -26,7 +29,7 @@
         "eval": ["212445217763229699"]
     },
     "dev": {
-        "usedash": true
+        "usedash": false
     },
     "raven": {
         "url": "xd"
