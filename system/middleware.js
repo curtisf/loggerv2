@@ -6,9 +6,11 @@ const Raven = require('raven')
 Raven.config(Config.raven.url).install()
 
 const dir = require('require-all')(path.join(__dirname, '/../events'))
+let total = 0
+
 function handle (type, data, guildID, channelID) {
   if (Config.datadog.use) {
-    Dog.increment('total_events.int')
+    total = total + 1
   }
   if (guildID && type !== 'messageCreate') {
     if (channelID) {
@@ -51,6 +53,13 @@ function handle (type, data, guildID, channelID) {
       } catch (_) {}
     }
   }
+}
+
+if (Config.datadog.use) {
+  setInterval(() => {
+    Dog.incrementBy('total_events.int', total)
+    total = 0
+  }, 15000)
 }
 
 export { handle }
