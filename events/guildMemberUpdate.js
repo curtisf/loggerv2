@@ -50,7 +50,7 @@ module.exports = {
           guildID: guild.id,
           type: `${key} Role`,
           changed: `► Name: **${member.username}#${member.discriminator}**\n► Role ${key}: **${role.name}**\n► Role ID: **${role.id}**`,
-          color: 8351671,
+          color: role.color ? role.color : 8351671,
           against: member
         }
         obj.footer = {
