@@ -15,11 +15,11 @@ module.exports = {
       against: unbanned
     }
     guild.getAuditLogs(1, null, 23).then((entry) => {
-      let user = entry.users[1]
+      let user = entry.users.filter(u => u.id !== unbanned.id)[0]
       obj = {
         guildID: guild.id,
         type: 'Member Unbanned',
-        changed: `► Name: \`${unbanned.username}#${unbanned.discriminator}\`\n► ID: **${unbanned.id}**`,
+        changed: `► Name: \`${unbanned.username}#${unbanned.discriminator}\`\n► ID: **${unbanned.id}**${entry.entries[0].reason ? `\n► Reason: \`${entry.entries[0].reason}\`` : ''}`,
         color: 8351671,
         against: unbanned,
         from: user
