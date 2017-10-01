@@ -478,9 +478,31 @@ Commands.get = {
         }, {
           name: 'Role Count',
           value: `${guild.roles.size}`
-        }, {
-          name: 'Emojis',
-          value: `${guild.emojis.length !== 0 ? guild.emojis.map(e => `<:${e.name}:${e.id}>`).join(', ') : 'None'}`
+        })
+        let emojis = {
+          0: []
+        }
+        let counter = 0
+        guild.emojis.forEach((emoji) => {
+          if (emojis[counter].join('\n').length > 900) {
+            counter++
+            emojis[counter] = []
+          } else {
+            emojis[counter].push(`${`<:${emoji.name}:${emoji.id}>`}`)
+          }
+        })
+        Object.keys(emojis).forEach((collection, index) => {
+          if (index !== 0) {
+            fields.push({
+              name: 'Continued',
+              value: emojis[index].join(' ')
+            })
+          } else {
+            fields.push({
+              name: 'Emojis',
+              value: emojis[index].join(' ')
+            })
+          }
         })
         require('../handlers/read').getGuildDocument(guild.id).then((doc) => {
           fields.push({
@@ -626,9 +648,31 @@ Commands.serverinfo = {
     }, {
       name: 'Role Count',
       value: `${guild.roles.size}`
-    }, {
-      name: 'Emojis',
-      value: `${guild.emojis.length !== 0 ? guild.emojis.map(e => `<:${e.name}:${e.id}>`).join(', ') : 'None'}`
+    })
+    let emojis = {
+      0: []
+    }
+    let counter = 0
+    guild.emojis.forEach((emoji) => {
+      if (emojis[counter].join('\n').length > 900) {
+        counter++
+        emojis[counter] = []
+      } else {
+        emojis[counter].push(`${`<:${emoji.name}:${emoji.id}>`}`)
+      }
+    })
+    Object.keys(emojis).forEach((collection, index) => {
+      if (index !== 0) {
+        fields.push({
+          name: 'Continued',
+          value: emojis[index].join(' ')
+        })
+      } else {
+        fields.push({
+          name: 'Emojis',
+          value: emojis[index].join(' ')
+        })
+      }
     })
 
     msg.channel.createMessage({embed: {
