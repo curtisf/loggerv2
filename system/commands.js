@@ -616,7 +616,7 @@ Commands.serverinfo = {
       value: `**${guild.memberCount}**\n**${guild.members.filter(u => u.bot).length}** bots\n**${guild.members.filter(u => !u.bot).length}** users`
     }, {
       name: 'Partnership',
-      value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${Object.keys(guild.features).map(feature => `\`${feature}\``).join(', ')}`}`
+      value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${guild.features.map(feature => `\`${feature}\``).join(', ')}`}`
     }, {
       name: 'Channels',
       value: `**${guild.channels.size}** total\n**${guild.channels.filter(c => c.type === 0).length}** text\n**${guild.channels.filter(c => c.type === 2).length}** voice\n**${guild.channels.filter(c => c.type === 4).length}** categories`
