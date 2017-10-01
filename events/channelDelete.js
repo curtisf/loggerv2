@@ -27,7 +27,7 @@ module.exports = {
       if (channel.userlimit) {
         obj.changed += `\n► Userlimit: **${channel.userlimit}**`
       }
-      let user = log.users[0]
+      let user = log.entries[0].user
       obj.footer = {
         text: `Deleted by ${user.username}#${user.discriminator}`,
         icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`

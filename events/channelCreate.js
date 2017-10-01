@@ -21,7 +21,7 @@ module.exports = {
       color: 8351671
     }
     channel.guild.getAuditLogs(1, null, 10).then((log) => {
-      let user = log.users[0]
+      let user = log.entries[0].user
       obj.footer = {
         text: `Created by ${user.username}#${user.discriminator}`,
         icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${obj.against.discriminator % 5}.png`}`

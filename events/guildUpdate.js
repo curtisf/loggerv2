@@ -27,7 +27,7 @@ module.exports = {
           type: 'Guild Updated',
           changed: 'You shouldn\'t be seeing this.',
           color: 8351671,
-          from: log.users[0]
+          from: log.entries[0].user
         }, null, null, fields)
       }
     }).catch(() => {})

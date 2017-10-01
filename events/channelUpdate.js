@@ -10,145 +10,71 @@ module.exports = {
     let before = raw.oldChannel
     let guild = raw.newChannel.guild
     if (now.position === before.position) {
-      if (before.permissionOverwrites.size > now.permissionOverwrites.size) {
-        guild.getAuditLogs(1, null, 15).then((log) => {
-          let overwrite = before.permissionOverwrites.map(o => o)[before.permissionOverwrites.size - 1]
-          let fields = []
-          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
-          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
-          let obj = {
-            guildID: guild.id,
-            channelID: now.id,
-            type: 'Channel Overwrite Deleted',
-            changed: `► Channel: **${now.name}**\n► ID: **${now.id}**\n► Type: **${overwrite.type}**\n► Affected: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`,
-            color: 8351671,
-            footer: {
-              text: `Deleted by ${user.username}#${user.discriminator}`,
-              icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
-            }
-          }
-          let keys = Object.keys(overwrite.json)
-          if (keys.length === 0) {
-            fields.push({
-              'name': 'Permissions',
-              'value': 'None.'
-            }, {
-              name: 'Info',
-              value: `Affected: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`
-            })
-            sendToLog(bot, obj, null, null, fields)
-          } else {
-            let allowed = []
-            let denied = []
-            keys.forEach(k => {
-              if (overwrite.json[k] === true) {
-                allowed.push(`**${k}**`)
-              } else {
-                denied.push(`**${k}**`)
-              }
-            })
-            fields.push({
-              'name': 'Info',
-              'value': `Channel: **${now.name}**\nID: **${now.id}**\nType: **${overwrite.type}**\n► Affected: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`
-            })
-            fields.push({
-              'name': 'Allowed',
-              'value': allowed.length !== 0 ? allowed.join('\n') : 'None Set'
-            }, {
-              'name': 'Denied',
-              'value': denied.length !== 0 ? denied.join('\n') : 'None Set'
-            })
-            fields.push({
-              'name': `Type`,
-              'value': `**${overwrite.type}**`
-            })
-            sendToLog(bot, obj, null, null, fields)
-          }
-        }).catch(() => {
-          sendToLog(bot, {
-            guildID: guild.id,
-            channelID: now.id,
-            type: 'Channel Overwrite Deleted',
-            changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
-            color: 8351671,
-            footer: {
-              text: 'I cannot view audit logs!',
-              icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
-            }
-          })
-        })
-      } else if (before.permissionOverwrites.size < now.permissionOverwrites.size) {
+      if (now.permissionOverwrites.size > before.permissionOverwrites.size) {
         guild.getAuditLogs(1, null, 13).then((log) => {
-          let overwrite = now.permissionOverwrites.map(o => o)[now.permissionOverwrites.size - 1]
-          let fields = []
-          let allowed = []
-          let denied = []
-          let keys = Object.keys(overwrite.json)
-          keys.forEach(k => {
-            if (overwrite.json[k] === true) {
-              allowed.push(`**${k}**`)
-            } else {
-              denied.push(`**${k}**`)
-            }
-          })
-          fields.push({
-            'name': 'Allowed',
-            'value': allowed.length !== 0 ? allowed.join('\n') : 'None Set'
-          }, {
-            'name': 'Denied',
-            'value': denied.length !== 0 ? denied.join('\n') : 'None Set'
-          })
-          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
-          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
-          fields.push({
-            name: 'Info',
-            value: `Channel: **${now.name}**\nID: **${now.id}**\nType of overwrite: **${overwrite.type}**\n${overwrite.type === 'role' ? `Role: **${guild.roles.filter(r => r.id === log.entries[0].targetID).name}**` : `Member: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`}`
-          })
-          let obj = {
-            guildID: guild.id,
-            channelID: now.id,
-            type: 'Channel Overwrite Created',
-            changed: `Channel: **${now.name}**\nID: **${now.id}**\nType of overwrite: **${overwrite.type}**\n${overwrite.type === 'role' ? `Role: **${guild.roles.filter(r => r.id === log.entries[0].targetID).name}**` : `Member: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`}`,
-            color: 8351671,
-            footer: {
-              text: `Created by ${user.username}#${user.discriminator}`,
-              icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
-            }
+        sendToLog(bot, {
+          guildID: guild.id,
+          channelID: now.id,
+          type: 'Channel Overwrite Created',
+          changed: `► Channel: **${now.name}** (${now.id})\n► Type: **${log.entries[0].role ? 'Role' : 'Member'}**\n► Against: **${log.entries[0].role ? `${log.entries[0].role.name}` : `${log.entries[0].member.username}#${log.entries[0].member.discriminator}`}**`,
+          color: 8351671,
+          footer: {
+            text: `Created by ${log.entries[0].user.username}#${log.entries[0].user.discriminator}`,
+            icon_url: `${log.entries[0].user.avatar ? `https://cdn.discordapp.com/avatars/${log.entries[0].user.id}/${log.entries[0].user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${log.entries[0].user.discriminator % 5}.png`}`
           }
-          fields.push({
-            'name': `Type`,
-            'value': `**${overwrite.type}**`
-          })
-          sendToLog(bot, obj, null, null, fields)
-        }).catch(() => {
-          sendToLog(bot, {
-            guildID: guild.id,
-            channelID: now.id,
-            type: 'Channel Overwrite Deleted',
-            changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
-            color: 8351671,
-            footer: {
-              text: 'I cannot view audit logs!',
-              icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
-            }
-          })
         })
-      } else if (before.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString() !== now.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString()) {
+      }).catch(() => {
+        sendToLog(bot, {
+          guildID: guild.id,
+          channelID: now.id,
+          type: 'Channel Overwrite Deleted',
+          changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
+          color: 8351671,
+          footer: {
+            text: 'I cannot view audit logs!',
+            icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+          }
+        })
+      })
+      } else if (now.permissionOverwrites.size < before.permissionOverwrites.size) {
+        guild.getAuditLogs(1, null, 15).then((log) => {
+        sendToLog(bot, {
+          guildID: guild.id,
+          channelID: now.id,
+          type: 'Channel Overwrite Deleted',
+          changed: `► Channel: **${now.name}** (${now.id})\n► Type: **${log.entries[0].role ? 'Role' : 'Member'}**\n► Against: **${log.entries[0].role ? `${log.entries[0].role.name}` : `${log.entries[0].member.username}#${log.entries[0].member.discriminator}`}**`,
+          color: 8351671,
+          footer: {
+            text: `Deleted by ${log.entries[0].user.username}#${log.entries[0].user.discriminator}`,
+            icon_url: `${log.entries[0].user.avatar ? `https://cdn.discordapp.com/avatars/${log.entries[0].user.id}/${log.entries[0].user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${log.entries[0].user.discriminator % 5}.png`}`
+          }
+        })
+      }).catch(() => {
+        sendToLog(bot, {
+          guildID: guild.id,
+          channelID: now.id,
+          type: 'Channel Overwrite Deleted',
+          changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
+          color: 8351671,
+          footer: {
+            text: 'I cannot view audit logs!',
+            icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
+          }
+        })
+      })
+      } else if (now.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString() !== before.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString()) {
         guild.getAuditLogs(1, null, 14).then((log) => {
-          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
-          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
-          let obj = {
+          sendToLog(bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Updated',
-            changed: `Channel: **${now.name}**\nID: **${now.id}**\nAffected: ${log.entries[0].role ? `**${log.entries[0].role.name}**` : `**${log.users[1].username}#${log.users[1].discriminator}**`}`,
+            changed: `► Channel: **${now.name}** (${now.id})\n► Type: **${log.entries[0].role ? 'Role' : 'Member'}**\n► Against: **${log.entries[0].role ? `${log.entries[0].role.name}` : `${log.entries[0].member.username}#${log.entries[0].member.discriminator}`}**`,
             color: 8351671,
             footer: {
-              text: `Updated by ${user.username}#${user.discriminator}`,
-              icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
+              text: `Updated by ${log.entries[0].user.username}#${log.entries[0].user.discriminator}`,
+              icon_url: `${log.entries[0].user.avatar ? `https://cdn.discordapp.com/avatars/${log.entries[0].user.id}/${log.entries[0].user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${log.entries[0].user.discriminator % 5}.png`}`
             }
-          }
-          sendToLog(bot, obj)
+          })
         }).catch(() => {
           sendToLog(bot, {
             guildID: guild.id,
@@ -164,8 +90,7 @@ module.exports = {
         })
       } else {
         guild.getAuditLogs(1, null, 11).then((log) => {
-          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
-          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
+          let user = log.entries[0].user
           let beforeProps = Object.keys(log.entries[0].before).map((key) => {
             return {
               'property': key,
@@ -212,6 +137,6 @@ module.exports = {
           })
         })
       }
-    }
+      }
   }
 }

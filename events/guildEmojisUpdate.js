@@ -18,7 +18,7 @@ module.exports = {
       obj.type += 'Deleted' // 62
       guild.getAuditLogs(1, null, 62).then((log) => {
         let emoji = oldEmojis[oldEmojis.length - 1]
-        let user = log.users[0]
+        let user = log.entries[0].user
         obj.changed += `► Name: **${emoji.name}**\n► ID: **${emoji.id}**\n► Managed: **${emoji.managed ? 'Yes' : 'No'}**\n► Restricted to role: **${emoji.roles.length !== 0 ? 'Yes' : 'No'}**`
         obj.from = user
         sendToLog(bot, obj)
@@ -35,7 +35,7 @@ module.exports = {
       obj.type += `Created` // 60
       guild.getAuditLogs(1, null, 60).then((log) => {
         let emoji = newEmojis[newEmojis.length - 1]
-        let user = log.users[0]
+        let user = log.entries[0].user
         obj.changed += `► Emoji: <:${emoji.name}:${emoji.id}>\n► Name: **${emoji.name}**\n► ID: **${emoji.id}**`
         obj.from = user
         sendToLog(bot, obj)
@@ -51,7 +51,7 @@ module.exports = {
     } else {
       obj.type += `Updated` // 61
       guild.getAuditLogs(1, null, 61).then((log) => {
-        let user = log.users[0]
+        let user = log.entries[0].user
         obj.from = user
         let emoji = guild.emojis.filter(e => e.id === log.entries[0].targetID)[0]
         if (log.entries[0].before.name !== log.entries[0].after.name) {

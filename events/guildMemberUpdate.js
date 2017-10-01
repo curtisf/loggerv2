@@ -19,12 +19,7 @@ module.exports = {
     if (member.roles.length !== oldMember.roles.length) {
       guild.getAuditLogs(1, null, 25).then((log) => {
         log.entries[0].guild = []
-        let user
-        if (log.users.length === 1) {
-          user = log.users[0]
-        } else {
-          user = log.users.filter(u => u.id !== member.id)[0] // order provided isn't always consistent
-        }
+        let user = log.entries[0].user
         let key = Object.keys(log.entries[0].after)[0]
         let role
         if (oldMember.roles.length > member.roles.length) {
