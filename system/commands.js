@@ -491,32 +491,29 @@ Commands.get = {
             emojis[counter].push(`${`<:${emoji.name}:${emoji.id}>`}`)
           }
         })
-        Object.keys(emojis).forEach((collection, index) => {
-          if (index !== 0) {
+        if (emojis[0].join('').length !== 0) {
+          require('../handlers/read').getGuildDocument(guild.id).then((doc) => {
             fields.push({
-              name: 'Continued',
-              value: emojis[index].join(' ')
+              name: 'Log Channel',
+              value: `${doc.logchannel ? `**${bot.getChannel(doc.logchannel).name}** (${doc.logchannel})` : 'None'}`
+            }, {
+              name: 'Disabled Events',
+              value: `${doc.disabledEvents.length !== 0 ? `\`\`\`${doc.disabledEvents.join(', ')}\`\`\`` : 'All are enabled'}`
+            }, {
+              name: 'Ignored Channels',
+              value: `${doc.ignoredChannels.length !== 0 ? `\`\`\`${doc.ignoredChannels.map(c => bot.getChannel(c).name).join(', ')}\`\`\`` : 'None'}`
             })
-          } else {
-            fields.push({
-              name: 'Emojis',
-              value: emojis[index].join(' ')
-            })
-          }
-        })
-        require('../handlers/read').getGuildDocument(guild.id).then((doc) => {
+            execute()
+          })
+        } else {
           fields.push({
-            name: 'Log Channel',
-            value: `${doc.logchannel ? `**${bot.getChannel(doc.logchannel).name}** (${doc.logchannel})` : 'None'}`
-          }, {
-            name: 'Disabled Events',
-            value: `${doc.disabledEvents.length !== 0 ? `\`\`\`${doc.disabledEvents.join(', ')}\`\`\`` : 'All are enabled'}`
-          }, {
-            name: 'Ignored Channels',
-            value: `${doc.ignoredChannels.length !== 0 ? `\`\`\`${doc.ignoredChannels.map(c => bot.getChannel(c).name).join(', ')}\`\`\`` : 'None'}`
+            name: 'Emojis',
+            value: '**None**'
           })
           execute()
-        })
+        }
+      } else {
+        execute()
       }
       function execute () { // eslint-disable-line
         if (user || channel || guild) {
@@ -661,19 +658,26 @@ Commands.serverinfo = {
         emojis[counter].push(`${`<:${emoji.name}:${emoji.id}>`}`)
       }
     })
-    Object.keys(emojis).forEach((collection, index) => {
-      if (index !== 0) {
-        fields.push({
-          name: 'Continued',
-          value: emojis[index].join(' ')
-        })
-      } else {
-        fields.push({
-          name: 'Emojis',
-          value: emojis[index].join(' ')
-        })
-      }
-    })
+    if (emojis[0].join('').length !== 0) {
+      Object.keys(emojis).forEach((collection, index) => {
+        if (index !== 0) {
+          fields.push({
+            name: 'Continued',
+            value: emojis[index].join(' ')
+          })
+        } else {
+          fields.push({
+            name: 'Emojis',
+            value: emojis[index].join(' ')
+          })
+        }
+      })
+    } else {
+      fields.push({
+        name: 'Emojis',
+        value: '**None**'
+      })
+    }
 
     msg.channel.createMessage({embed: {
       timestamp: new Date(msg.timestamp),

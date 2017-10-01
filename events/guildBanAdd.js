@@ -15,7 +15,7 @@ module.exports = {
       against: banned
     }
     guild.getAuditLogs(1, null, 22).then((entry) => {
-      let user = log.entries[0].user
+      let user = entry.entries[0].user
       obj = {
         guildID: guild.id,
         type: 'Member Banned',

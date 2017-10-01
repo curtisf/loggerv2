@@ -16,7 +16,7 @@ module.exports = {
     }
     setTimeout(() => {
       guild.getAuditLogs(1, null, 23).then((entry) => {
-        let user = log.entries[0].user
+        let user = entry.entries[0].user
         obj = {
           guildID: guild.id,
           type: 'Member Unbanned',

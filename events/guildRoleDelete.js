@@ -25,7 +25,7 @@ module.exports = {
       color: role.color
     }
     guild.getAuditLogs(1, null, 32).then((entry) => {
-      let user = log.entries[0].user
+      let user = entry.entries[0].user
       obj.from = user
       sendToLog(bot, obj)
     }).catch(() => {})
