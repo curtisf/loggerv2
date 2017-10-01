@@ -642,7 +642,7 @@ Commands.serverinfo = {
   }
 }
 
-Commands.lastlogs = {
+Commands.auditlogs = {
   name: 'auditlogs',
   desc: 'Get the last x audit logs (up to 25)',
   func: function (msg, suffix, bot) {
