@@ -1,5 +1,6 @@
 import { checkCanUse, checkIfAllowed } from './utils'
 import { log } from './log'
+import { typeName } from './determinetype'
 import util from 'util'
 import path from 'path'
 const Config = require('../botconfig.json')
@@ -14,6 +15,18 @@ Object.keys(eventsObj).map((event) => eventsObj[event]).map((event) => event.typ
   }
 })
 let Commands = []
+
+let notablePermissions = [
+  'kickMembers',
+  'banMembers',
+  'administrator',
+  'manageChanneks',
+  'manageGuilds',
+  'manageMessages',
+  'manageRoles',
+  'manageEmojis',
+  'manageWebhooks'
+]
 
 Commands.ping = {
   name: 'ping',
@@ -47,7 +60,7 @@ Commands.info = {
       },
       {
         'name': 'Technical Details',
-        'value': 'Logger is written in JavaScript utilizing the Node.js runtime. It uses the **discordie** library to interact with the Discord API. For data storage, RethinkDB and Redis are used.'
+        'value': 'Logger is written in JavaScript utilizing the Node.js runtime. It uses the **eris** library to interact with the Discord API. For data storage, RethinkDB and Redis are used.'
       },
       {
         'name': 'The Authors',
@@ -63,28 +76,43 @@ Commands.eval = {
   desc: 'Good \'ol eval.',
   hidden: true,
   func: function (msg, suffix, bot) {
-    const Config = require('../botconfig.json')
     let canUse = checkCanUse(msg.author.id, 'eval')
     if (canUse) {
       try {
-          let evalContent = util.inspect(eval(suffix), { // eslint-disable-line
-            depth: 1
-          })
-        if (evalContent.length >= 2000) {
-          evalContent = evalContent.substr(0, 1790) + '(cont)'
-          evalContent.replace(new RegExp(`Bot ${Config.core.token}`, 'gi'), 'wew')
-          msg.channel.createMessage('```xl\n' + evalContent + '```').then((m) => {
-            m.edit('```xl\n' + evalContent + '```')
-          })
-        } else {
-          let init = new Date(msg.timestamp)
-          evalContent.replace(new RegExp(`Bot ${Config.core.token}`, 'gi'), 'wew')
-          msg.channel.createMessage('```xl\n' + evalContent + '```').then((m) => {
-            m.edit(`Eval done in \`${Math.floor(new Date(m.timestamp) - init)}\` ms!\n` + '```xl\n' + evalContent + '```')
-          })
+        var returned = eval(suffix) // eslint-disable-line no-eval
+        var str = util.inspect(returned, {
+          depth: 1
+        })
+        if (str.length > 1900) {
+          str = str.substr(0, 1897)
+          str = str + '...'
         }
+        str = str.replace(new RegExp(bot.token, 'gi'), '( ͡° ͜ʖ ͡°)') // thanks doug
+        msg.channel.createMessage('```xl\n' + str + '\n```').then((ms) => {
+          if (returned !== undefined && returned !== null && typeof returned.then === 'function') {
+            returned.then(() => {
+              var str = util.inspect(returned, {
+                depth: 1
+              })
+              if (str.length > 1900) {
+                str = str.substr(0, 1897)
+                str = str + '...'
+              }
+              ms.edit('```xl\n' + str + '\n```')
+            }, (e) => {
+              var str = util.inspect(e, {
+                depth: 1
+              })
+              if (str.length > 1900) {
+                str = str.substr(0, 1897)
+                str = str + '...'
+              }
+              ms.edit('```xl\n' + str + '\n```')
+            })
+          }
+        })
       } catch (e) {
-        msg.channel.createMessage('Error:\n' + '```xl\n' + e + '```')
+        msg.channel.createMessage('```xl\n' + e + '\n```')
       }
     }
   }
@@ -397,42 +425,98 @@ Commands.get = {
       let user = bot.users.get(suffix) || bot.users.filter(u => u.username.toLowerCase().startsWith(suffix))[0]
       let guild = bot.guilds.get(suffix) || bot.guilds.filter(g => g.name.toLowerCase().startsWith(suffix))[0]
       let channel = guild ? undefined : bot.getChannel(suffix)
-      let field
+      let fields = []
       if (user) {
-        field = [{
-          name: 'Found User',
-          value: `⇨ Name: **${user.username}#${user.discriminator}**\n⇨ Created At: **${new Date(user.createdAt).toString().substr(0, 21)}**\n⇨ ID: **${user.id}**\n⇨ **[Avatar](${user.avatar ? user.avatarURL : user.defaultAvatarURL})**\n⇨ <@${user.id}>`
-        }]
+        fields.push({
+          name: 'Name',
+          value: `Known as: **${user.username}#${user.discriminator}**\nID: **${user.id}**\n<@${user.id}>`
+        }, {
+          name: 'Creation',
+          value: `**${new Date(user.createdAt).toString().substr(0, 21)}**`
+        }, {
+          name: 'Avatar',
+          value: `**[Click Me](${user.avatar ? user.avatarURL : user.defaultAvatarURL})**`
+        })
+        execute()
       } else if (channel) {
-        field = [{
-          name: 'Found Channel',
-          value: `⇨ Name: **${channel.name}**\n⇨ Channel Position: **${channel.position}**\n⇨ ID: **${channel.id}**\n⇨ Part of category: **${channel.parentID ? 'Yes' : 'No'}**`
-        }]
+        fields.push({
+          name: 'Name',
+          value: `**${channel.name}** (**${channel.id}**)`
+        }, {
+          name: 'Position',
+          value: `${channel.position}`
+        }, {
+          name: 'In Category',
+          value: `**${channel.parentID ? 'Yes' : 'No'}**`
+        }, {
+          name: 'Part Of',
+          value: `**${channel.guild.name}** (${channel.guild.id})`
+        })
+        execute()
       } else if (guild) {
-        field = [{
-          name: 'Found Guild',
-          value: `⇨ Name: **${guild.name}**\n⇨ ID: **${guild.id}**\n⇨ Owner ID: **${guild.ownerID}**\n⇨ Icon: **${guild.iconURL ? `[Click](${guild.iconURL})` : 'None'}**\n⇨ Member Count: **${guild.memberCount}**\n⇨ Partnered: **${guild.features.length !== 0 ? 'Yes' : 'No'}**\n⇨ Channels: **${guild.channels.size}**\n⇨ Roles: **${guild.roles.size}**\n⇨ Region: **${guild.region}**\n⇨ Emojis: **${guild.emojis.length}**\n⇨ Verification Level: **${guild.verificationLevel}**`
-        }]
+        fields.push({
+          name: 'Name',
+          value: `**${guild.name}** (${guild.id})`
+        }, {
+          name: 'Verification Level',
+          value: `${guild.verificationLevel}`
+        }, {
+          name: 'Owner',
+          value: `**${bot.users.get(guild.ownerID).username}#${bot.users.get(guild.ownerID).discriminator}** (${guild.ownerID})`
+        }, {
+          name: 'Member Count',
+          value: `**${guild.memberCount}**\n**${guild.members.filter(u => u.bot).length}** bots\n**${guild.members.filter(u => !u.bot).length}** users`
+        }, {
+          name: 'Partnership',
+          value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${Object.keys(guild.features).map(feature => `\`${feature}\``).join(', ')}`}`
+        }, {
+          name: 'Channels',
+          value: `**${guild.channels.size}** total\n**${guild.channels.filter(c => c.type === 0).length}** text\n**${guild.channels.filter(c => c.type === 2).length}** voice\n**${guild.channels.filter(c => c.type === 4).length}** categories`
+        }, {
+          name: 'Region',
+          value: `**${guild.region}**`
+        }, {
+          name: 'Role Count',
+          value: `${guild.roles.size}`
+        }, {
+          name: 'Emojis',
+          value: `${guild.emojis.length !== 0 ? guild.emojis.map(e => `<:${e.name}:${e.id}>`).join(', ') : 'None'}`
+        })
+        require('../handlers/read').getGuildDocument(guild.id).then((doc) => {
+          fields.push({
+            name: 'Log Channel',
+            value: `${doc.logchannel ? `**${bot.getChannel(doc.logchannel).name}** (${doc.logchannel})` : 'None'}`
+          }, {
+            name: 'Disabled Events',
+            value: `${doc.disabledEvents.length !== 0 ? `\`\`\`${doc.disabledEvents.join(', ')}\`\`\`` : 'All are enabled'}`
+          }, {
+            name: 'Ignored Channels',
+            value: `${doc.ignoredChannels.length !== 0 ? `\`\`\`${doc.ignoredChannels.map(c => bot.getChannel(c).name).join(', ')}\`\`\`` : 'None'}`
+          })
+          execute()
+        })
       }
-      if (user || channel || guild) {
-        msg.channel.createMessage({
-          embed: {
-            timestamp: new Date(msg.timestamp),
-            color: 5231792,
-            fields: field
-          }
-        })
-      } else {
-        msg.channel.createMessage({
-          embed: {
-            timestamp: new Date(msg.timestamp),
-            color: 16208655,
-            fields: [{
-              name: 'Error',
-              value: 'No user, channel, or guild found!'
-            }]
-          }
-        })
+      function execute () { // eslint-disable-line
+        if (user || channel || guild) {
+          msg.channel.createMessage({
+            embed: {
+              timestamp: new Date(msg.timestamp),
+              color: 5231792,
+              fields: fields
+            }
+          })
+        } else {
+          msg.channel.createMessage({
+            embed: {
+              timestamp: new Date(msg.timestamp),
+              color: 16208655,
+              fields: [{
+                name: 'Error',
+                value: 'No user, channel, or guild found!'
+              }]
+            }
+          })
+        }
       }
     } else {
       msg.channel.createMessage({
@@ -449,6 +533,166 @@ Commands.get = {
   }
 }
 
+Commands.userinfo = {
+  name: 'userinfo',
+  desc: 'Get info from a member of the server.',
+  func: function (msg, suffix, bot) {
+    let fields = []
+    let user = msg.channel.guild.members.find(m => m.nick === suffix) || msg.channel.guild.members.find(m => m.username === suffix) || msg.channel.guild.members.filter(u => u.username.toLowerCase().startsWith(suffix))[0]
+    if (msg.mentions.length !== 0) {
+      user = msg.channel.guild.members.get(msg.mentions[0].id)
+    }
+    if (!suffix) {
+      user = msg.member
+    }
+    if (user) {
+      let perms = []
+      let color = 12552203 // away color
+      if (user.status === 'online') {
+        color = 8383059
+      } else if (user.status === 'offline') {
+        color = 12041157
+      } else if (user.status === 'dnd') {
+        color = 16396122
+      }
+      Object.keys(user.permission.json).forEach((perm) => {
+        if (user.permission.json[perm] === true && notablePermissions.indexOf(perm) !== -1) {
+          perms.push(perm)
+        }
+      })
+      if (perms.length === 0) {
+        perms.push('None')
+      }
+      fields.push({
+        name: 'Name',
+        value: `**${user.username}#${user.discriminator}** ${user.nick ? `(**${user.nick}**)` : ''} (${user.id})\n${user.avatar.startsWith('a_') ? 'Has Nitro or Partner' : 'Regular User'}`
+      }, {
+        name: 'Join Date',
+        value: `**${new Date(user.joinedAt)}**`
+      }, {
+        name: 'Creation Date',
+        value: `**${new Date(user.createdAt).toString().substr(0, 21)}**`
+      }, {
+        name: 'Roles',
+        value: `${user.roles.length !== 0 ? user.roles.map(r => `\`${msg.channel.guild.roles.get(r).name}\``).join(', ') : 'None'}`
+      }, {
+        name: 'Notable Permissions',
+        value: `\`${perms.join(', ')}\``
+      })
+      msg.channel.createMessage({embed: {
+        timestamp: new Date(msg.timestamp),
+        color: color,
+        thumbnail: {
+          url: user.avatar ? user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`
+        },
+        fields: fields
+      }})
+    } else {
+      msg.channel.createMessage({embed: {
+        color: 16396122,
+        description: '**The specified user isn\'t a member of the server**'
+      }})
+    }
+  }
+}
+
+Commands.serverinfo = {
+  name: 'serverinfo',
+  desc: 'Get info about the server in which this gets used in!',
+  func: function (msg, suffix, bot) {
+    let guild = msg.channel.guild
+    let fields = []
+    fields.push({
+      name: 'Name',
+      value: `**${guild.name}** (${guild.id})`
+    }, {
+      name: 'Verification Level',
+      value: `${guild.verificationLevel}`
+    }, {
+      name: 'Owner',
+      value: `**${bot.users.get(guild.ownerID).username}#${bot.users.get(guild.ownerID).discriminator}** (${guild.ownerID})`
+    }, {
+      name: 'Member Count',
+      value: `**${guild.memberCount}**\n**${guild.members.filter(u => u.bot).length}** bots\n**${guild.members.filter(u => !u.bot).length}** users`
+    }, {
+      name: 'Partnership',
+      value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${Object.keys(guild.features).map(feature => `\`${feature}\``).join(', ')}`}`
+    }, {
+      name: 'Channels',
+      value: `**${guild.channels.size}** total\n**${guild.channels.filter(c => c.type === 0).length}** text\n**${guild.channels.filter(c => c.type === 2).length}** voice\n**${guild.channels.filter(c => c.type === 4).length}** categories`
+    }, {
+      name: 'Region',
+      value: `**${guild.region}**`
+    }, {
+      name: 'Role Count',
+      value: `${guild.roles.size}`
+    }, {
+      name: 'Emojis',
+      value: `${guild.emojis.length !== 0 ? guild.emojis.map(e => `<:${e.name}:${e.id}>`).join(', ') : 'None'}`
+    })
+
+    msg.channel.createMessage({embed: {
+      timestamp: new Date(msg.timestamp),
+      color: 3191403,
+      thumbnail: {
+        url: guild.iconURL ? guild.iconURL : `http://www.kalahandi.info/wp-content/uploads/2016/05/sorry-image-not-available.png`
+      },
+      fields: fields
+    }})
+  }
+}
+
+Commands.lastlogs = {
+  name: 'auditlogs',
+  desc: 'Get the last x audit logs (up to 25)',
+  func: function (msg, suffix, bot) {
+    if (!msg.member.permission.json['viewAuditLogs']) {
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't view audit logs!`)
+    } else if (!msg.channel.guild.members.get(bot.user.id).permission.json['viewAuditLogs']) {
+      msg.channel.createMessage(`<@${msg.author.id}>, I can't view audit logs!`)
+    } else if (isNaN(suffix)) {
+      msg.channel.createMessage(`<@${msg.author.id}>, please provide a number between 1 and 20 to fetch.`)
+    } else if (suffix > 25) {
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch more than 20 audit logs at once.`)
+    } else if (suffix < 1) {
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch less than 1 audit logs.`)
+    } else {
+      msg.channel.guild.getAuditLogs(suffix).then((logs) => {
+        let fields = []
+        let what
+        logs.entries.forEach((log) => {
+          what = typeName(log.actionType)
+          let reason = log.reason
+          let user = log.user
+          let who
+          if (bot.users.get(log.targetID)) {
+            who = `user **${bot.users.get(log.targetID).username}#${bot.users.get(log.targetID).discriminator}**`
+          } else if (msg.channel.guild.channels.get(log.targetID)) {
+            who = `channel **${msg.channel.guild.channels.get(log.targetID).name}**`
+          } else if (msg.channel.guild.roles.get(log.targetID)) {
+            who = `role **${msg.channel.guild.roles.get(log.targetID).name}**`
+          } else {
+            who = '**an unknown user/channel/role**'
+          }
+          if (log.member) {
+            who = log.member.username ? `**${log.member.username}#${log.member.discriminator}**` : `${msg.channel.guild.members.get(log.member.id).username}#${msg.channel.guild.members.get(log.member.id).discriminator}`
+          }
+          fields.push({
+            name: what,
+            value: `From **${user.username}#${user.discriminator}** against/affecting ${who} ${reason ? `with the reason \`${reason}\`` : ''}`
+          })
+        })
+        msg.channel.createMessage({content: `__Showing last **${suffix}** logs.__`,
+          embed: {
+            timestamp: new Date(msg.timestamp),
+            color: 8039393,
+            fields: fields
+          }})
+      })
+    }
+  }
+}
+
 Commands.help = {
   name: 'help',
   desc: 'Provides help with the bot\'s functionality',
@@ -456,6 +700,8 @@ Commands.help = {
     let cmdArray = [`__Help for Logger__\n\n`]
     Object.keys(Commands).forEach((cmd) => {
       if (!Commands[cmd].hasOwnProperty('hidden')) {
+        cmdArray.push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
+      } else if (checkCanUse(msg.author.id, 'eval')) {
         cmdArray.push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
       }
     })

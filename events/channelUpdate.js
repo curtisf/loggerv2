@@ -14,12 +14,13 @@ module.exports = {
         guild.getAuditLogs(1, null, 15).then((log) => {
           let overwrite = before.permissionOverwrites.map(o => o)[before.permissionOverwrites.size - 1]
           let fields = []
-          let user = log.users[0]
+          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
+          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
           let obj = {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Deleted',
-            changed: `► Channel: **${now.name}**\n► ID: **${now.id}**\n► Type: **${overwrite.type}**`,
+            changed: `► Channel: **${now.name}**\n► ID: **${now.id}**\n► Type: **${overwrite.type}**\n► Affected: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`,
             color: 8351671,
             footer: {
               text: `Deleted by ${user.username}#${user.discriminator}`,
@@ -31,6 +32,9 @@ module.exports = {
             fields.push({
               'name': 'Permissions',
               'value': 'None.'
+            }, {
+              name: 'Info',
+              value: `Affected: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`
             })
             sendToLog(bot, obj, null, null, fields)
           } else {
@@ -45,7 +49,7 @@ module.exports = {
             })
             fields.push({
               'name': 'Info',
-              'value': `Channel: **${now.name}**\nID: **${now.id}**\nType: **${overwrite.type}**`
+              'value': `Channel: **${now.name}**\nID: **${now.id}**\nType: **${overwrite.type}**\n► Affected: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`
             })
             fields.push({
               'name': 'Allowed',
@@ -94,16 +98,17 @@ module.exports = {
             'name': 'Denied',
             'value': denied.length !== 0 ? denied.join('\n') : 'None Set'
           })
-          let user = log.users[0]
+          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
+          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
           fields.push({
             name: 'Info',
-            value: `Channel: **${now.name}**\nID: **${now.id}**\nType of overwrite: **${overwrite.type}**\n${overwrite.type === 'role' ? `Role: **${guild.roles.filter(r => r.id === log.entries[0].targetID).name}**` : `Member: **${log.users[1].username}#${log.users[1].discriminator}**`}`
+            value: `Channel: **${now.name}**\nID: **${now.id}**\nType of overwrite: **${overwrite.type}**\n${overwrite.type === 'role' ? `Role: **${guild.roles.filter(r => r.id === log.entries[0].targetID).name}**` : `Member: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`}`
           })
           let obj = {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Created',
-            changed: `Channel: **${now.name}**\nID: **${now.id}**\nType of overwrite: **${overwrite.type}**\n${overwrite.type === 'role' ? `Role: **${guild.roles.filter(r => r.id === log.entries[0].targetID).name}**` : `Member: **${log.users[1].username}#${log.users[1].discriminator}**`}`,
+            changed: `Channel: **${now.name}**\nID: **${now.id}**\nType of overwrite: **${overwrite.type}**\n${overwrite.type === 'role' ? `Role: **${guild.roles.filter(r => r.id === log.entries[0].targetID).name}**` : `Member: **${log.entries[0].member.username}#${log.entries[0].member.discriminator}**`}`,
             color: 8351671,
             footer: {
               text: `Created by ${user.username}#${user.discriminator}`,
@@ -130,7 +135,8 @@ module.exports = {
         })
       } else if (before.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString() !== now.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString()) {
         guild.getAuditLogs(1, null, 14).then((log) => {
-          let user = log.users[0]
+          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
+          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
           let obj = {
             guildID: guild.id,
             channelID: now.id,
@@ -158,7 +164,8 @@ module.exports = {
         })
       } else {
         guild.getAuditLogs(1, null, 11).then((log) => {
-          let user = log.users[0]
+          log.entries[0].member = log.entries[0].member.username ? log.entries[0].member : guild.members.get(log.entries[0].member.id)
+          let user = log.users.filter(u => u.id !== log.entries[0].member.id)[0]
           let beforeProps = Object.keys(log.entries[0].before).map((key) => {
             return {
               'property': key,
@@ -186,7 +193,7 @@ module.exports = {
               color: 8351671,
               footer: {
                 text: `Updated by ${user.username}#${user.discriminator}`,
-                icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'}`
+                icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
               }
             }
             sendToLog(bot, obj, null, null, changes)

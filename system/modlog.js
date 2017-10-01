@@ -63,6 +63,9 @@ function sendToLog (bot, obj, optGuild, optChannel, fields) {
       abstractEmbed.footer.icon_url = `${obj.footer.icon_url}`
       abstractEmbed.footer.text = `${obj.footer.text}`
     }
+    if (obj.image) {
+      abstractEmbed.image = obj.image
+    }
 
     if (fields) {
       abstractEmbed.title = obj.type

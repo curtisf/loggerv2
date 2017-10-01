@@ -38,7 +38,9 @@ function handle (type, data, guildID, channelID) {
             if (dEvents.split(',').indexOf(type) === -1) {
               try {
                 dir[type].run(bot, data)
-              } catch (_) {}
+              } catch (e) {
+                console.error(e)
+              }
             }
           })
         } else {

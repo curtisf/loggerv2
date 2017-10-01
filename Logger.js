@@ -216,6 +216,13 @@ bot.on('guildMemberUpdate', (guild, member, oldMember) => {
   middleware('guildMemberUpdate', g, guild.id)
 })
 
+bot.on('userUpdate', (newUser, oldUser) => {
+  let g = {}
+  g.user = newUser
+  g.old = oldUser
+  middleware('userUpdate', g)
+})
+
 bot.on('voiceChannelJoin', (member, channel) => {
   let c = {}
   c.member = member
