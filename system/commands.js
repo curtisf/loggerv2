@@ -650,10 +650,14 @@ Commands.serverinfo = {
       0: []
     }
     let counter = 0
-    guild.emojis.forEach((emoji) => {
-      if (emojis[counter].join('\n').length > 900) {
-        counter++
-        emojis[counter] = []
+    guild.emojis.forEach((emoji, index) => {
+      if (emojis[counter].join('\n').length > 950) {
+        if (++index === guild.emojis.length) {
+          emojis[counter].push(`${`<:${emoji.name}:${emoji.id}>`}`)
+        } else {
+          counter++
+          emojis[counter] = []
+        }
       } else {
         emojis[counter].push(`${`<:${emoji.name}:${emoji.id}>`}`)
       }
