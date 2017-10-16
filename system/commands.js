@@ -120,7 +120,7 @@ Commands.eval = {
 
 Commands.setchannel = {
   name: 'setchannel',
-  desc: 'Use in the channel you want me to log to.',
+  desc: 'Use in the channel you want me to log to, or mention it as a suffix (%setchannel #channelname | %setchannel)',
   func: function (msg, suffix, bot) {
     let allowed = checkIfAllowed(msg)
     let botPerms = msg.channel.guild.members.get(bot.user.id).permission.json
@@ -146,7 +146,7 @@ Commands.setchannel = {
               })
             } else {
               msg.author.getDMChannel().then((c) => {
-                c.createMessage(`I can't send messages to **${channel.name}**!`)
+                c.createMessage(`I can't send messages to **${channel[0].name}**!`)
               }).catch(() => {})
             }
           } else {
