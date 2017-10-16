@@ -128,7 +128,30 @@ Commands.setchannel = {
     if (botPerms.sendMessages) {
       if (allowed) {
         if (suffix) {
-          msg.channel.createMessage(`<@${msg.author.id}>, Please use this in the channel that you want me to log to.`)
+          let channelID = suffix.replace(/<|>|#/g, '') // replace <, >, and # just incase a user specifies a channel
+          let channel = msg.channel.guild.channels.filter(c => c.id === channelID)
+          if (channel.length !== 0) {
+            if (channel[0].permissionsOf(bot.user.id).json.readMessages) {
+              require('../handlers/update').updateGuildDocument(msg.channel.guild.id, {
+                'logchannel': channel[0].id
+              }).then((r) => {
+                if (r === true) {
+                  msg.channel.createMessage(`<@${msg.author.id}>, I will now log actions to **${channel[0].name}**!`)
+                  loadToRedis(msg.channel.guild.id)
+                } else {
+                  msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`)
+                  log.error(`Error while setting channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
+                  log.error(r)
+                }
+              })
+            } else {
+              msg.author.getDMChannel().then((c) => {
+                c.createMessage(`I can't send messages to **${channel.name}**!`)
+              }).catch(() => {})
+            }
+          } else {
+            msg.channel.createMessage(`<@${msg.author.id}>, that channel doesn't exist. Either provide a valid channel or just use %setchannel in the channel you want me to log to.`)
+          }
         } else {
           require('../handlers/update').updateGuildDocument(msg.channel.guild.id, { // to avoid globally requiring db handler functions
             'logchannel': msg.channel.id
@@ -757,7 +780,7 @@ Commands.help = {
         cmdArray.push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
       }
     })
-    cmdArray.push(`\nNeed an easier way to manage your bot? Check out http://logger.whatezlife.com\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
+    cmdArray.push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/dashboard/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
     msg.addReaction('📜').catch(() => {})
     msg.author.getDMChannel().then((DMChannel) => {
       DMChannel.createMessage(cmdArray.join('')).catch(() => {})
