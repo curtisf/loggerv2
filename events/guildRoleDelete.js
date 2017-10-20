@@ -7,7 +7,21 @@ module.exports = {
   run: function (bot, raw) {
     let guild = raw.guild
     let role = raw.role
-    let keys = Object.keys(role.permissions.json)
+    let keys
+    if (role.permissions.json) {
+      keys = Object.keys(role.permissions.json)
+    } else {
+      let obj = {
+        guildID: guild.id,
+        type: 'Role Deleted',
+        changed: `**Unknown Role Deleted**`
+      }
+      guild.getAuditLogs(1, null, 32).then((entry) => {
+        let user = entry.entries[0].user
+        obj.from = user
+        sendToLog(bot, obj)
+      }).catch(() => {})
+    }
     let perms = []
     if (keys.length !== 0) {
       keys.forEach((k) => {
