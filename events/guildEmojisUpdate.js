@@ -39,14 +39,15 @@ module.exports = {
         obj.changed += `► Emoji: <:${emoji.name}:${emoji.id}>\n► Name: **${emoji.name}**\n► ID: **${emoji.id}**`
         obj.from = user
         sendToLog(bot, obj)
-      }).catch(() => {
+      }).catch((e) => {
         obj.type = 'Unknown Emoji Change'
         obj.changed += 'Unknown'
         obj.footer = {
           text: 'Either an error occurred or I can\'t view audit logs!',
           icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
         }
-        sendToLog(bot, obj)
+        // sendToLog(bot, obj)
+	console.error("Error while executing emoji updated event", e) // just to catch this annoying as heck error
       })
     } else {
       obj.type += `Updated` // 61
@@ -61,14 +62,15 @@ module.exports = {
           obj.changed += `❗ **Possible Unsupported Emoji Change!**\n► Emoji: <:${emoji.name}:${emoji.id}>\n► What changed: **${Object.keys(log.entries[0].after)[0]}**\n► Now: **${log.entries[0].after[Object.keys(log.entries[0].after)[0]]}**\n► Was: **${log.entries[0].before[Object.keys(log.entries[0].before)[0]]}**`
           sendToLog(bot, obj)
         }
-      }).catch(() => {
+      }).catch((e) => {
         obj.type = 'Unknown Emoji Change'
         obj.changed += 'Unknown'
         obj.footer = {
           text: 'I cannot view audit logs or something went wrong!',
           icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
         }
-        sendToLog(bot, obj)
+        // sendToLog(bot, obj)
+	console.error("Error while executing emoji updated event.", e)
       })
     }
   }
