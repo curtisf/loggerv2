@@ -191,7 +191,7 @@ Commands.clearchannel = {
       }).then((r) => {
         if (r === true) {
           msg.channel.createMessage(`<@${msg.author.id}>, Log channel wiped!`).catch(() => {})
-          loadToRedis(msg.guild.id)
+          loadToRedis(msg.channel.guild.id)
         } else {
           msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => {})
           log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
