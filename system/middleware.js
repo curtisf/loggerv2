@@ -59,6 +59,8 @@ function handle (type, data, guildID, channelID) {
 
 if (Config.datadog.use) {
   setInterval(() => {
+    let used = process.memoryUsage().heapUsed / 1024 / 1024
+    Dog.gauge('bot.memusage', Math.round((used * 100) / 100))
     Dog.incrementBy('total_events.int', total)
     Dog.gauge('total_users', bot.users.size)
     Dog.gauge('bot_uptime', bot.uptime)

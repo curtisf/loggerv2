@@ -1,3 +1,4 @@
+import { Dog } from '../Logger'
 import { log } from '../system/log'
 const Config = require('../botconfig.json')
 let Commands = require('../system/commands').Commands
@@ -40,6 +41,9 @@ module.exports = {
               gd.defaultChannel = []
               gd.shard = []
               gd.toString = 'no.'
+              if (Config.datadog.use) {
+		Dog.incrementBy('bot.totalCommands', 1)
+              }
               log.info(`Command "${cmd}${suffix ? ` ${suffix}` : ''}" from user ${msg.author.username}#${msg.author.discriminator} (${msg.author.id})\n`, {
                 guild: gd,
                 botID: bot.user.id,
