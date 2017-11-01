@@ -1,5 +1,7 @@
 const Dash = require('rethinkdbdash')
-const Config = require('../config.json')
+const Config = require('../botconfig.json')
+const Raven = require('raven')
+Raven.config(Config.raven.url).install()
 let r = new Dash({
   user: Config.database.user,
   password: Config.database.pass,

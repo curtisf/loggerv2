@@ -2,13 +2,19 @@ import { bot, Redis } from '../Logger'
 import { log } from '../system/log'
 import { recoverGuild } from './create'
 import { r } from '../system/rethinkclient'
+const Config = require('../botconfig.json')
+const Raven = require('raven')
+Raven.config(Config.raven.url).install()
 
 function getLogChannel (guildID) {
   return new Promise((resolve, reject) => {
     Redis.existsAsync(`${guildID}:logchannel`).then((res) => {
       if (res) {
         Redis.getAsync(`${guildID}:logchannel`).then((channelID) => {
-          let channel = bot.Channels.get(channelID)
+          let channel
+          if (bot.guilds.get(guildID)) {
+            channel = bot.guilds.get(guildID).channels.get(channelID)
+          }
           if (channel) {
             resolve(channel)
           } else {
@@ -28,11 +34,11 @@ function addChannelToRedis (guildID, cb) {
       Redis.set(`${guildID}:ignoredChannels`, doc.ignoredChannels.toString())
       Redis.set(`${guildID}:disabledEvents`, doc.disabledEvents.toString())
       if (doc.logchannel) {
-        let channel = bot.Channels.get(doc.logchannel)
+        let channel = bot.guilds.get(guildID).channels.get(doc.logchannel)
         if (channel) {
           Redis.del(`${guildID}:logchannel`)
           Redis.set(`${guildID}:logchannel`, doc.logchannel.toString()) // no need to expire.
-          cb(bot.Channels.get(doc.logchannel))
+          cb(bot.guilds.get(guildID).channels.get(doc.logchannel))
         } else {
           cb(false) // eslint-disable-line
         }

@@ -1,0 +1,11 @@
+{
+    "devmode": true,
+    "devIP": "your IP",
+    "port": 8000,
+    "sessionSecret": "logger dashboard is wewest lad",
+    "webhookURL": "https://canary.discordapp.com/api/123456789/asdaqwdasdwa",
+    "oauth": {
+        "clientID": "",
+        "secret": ""
+    }
+}
