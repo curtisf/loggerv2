@@ -154,7 +154,7 @@ function getGuildDocument (guildID) {
 function loadToRedis (guildID) {
   r.db('Logger').table('Guilds').get(guildID).run().then((doc) => {
     if (doc) {
-      if (!doc.logBots || !doc.overviewID) {
+      if (doc.logBots === undefined || doc.overviewID === undefined) {
         updateGuildDocument(guildID, { 'logBots': doc.logBots !== undefined ? doc.logBots : '', 'overviewID': doc.overviewID !== undefined ? doc.overviewID : '' }).then(() => {
           Redis.set(`${guildID}:ignoredChannels`, doc.ignoredChannels.toString())
           Redis.set(`${guildID}:disabledEvents`, doc.disabledEvents.toString())
