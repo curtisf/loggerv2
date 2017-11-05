@@ -867,12 +867,12 @@ Commands.livestats = {
             })
           })
         } else {
-          msg.channel.createMessage('You lack the permissions needed to use **livestats**! Needed: **Administrator**, **Manage Server**, or server ownership')
+          msg.author.getDMChannel().then((c) => {
+            c.createMessage(`I can't send messages to **${msg.channel.name}** (${msg.channel.guild.name})!`).catch(() => {})
+          })
         }
       } else {
-        msg.author.getDMChannel().then((c) => {
-          c.createMessage(`I can't send messages to **${msg.channel.name}** (${msg.channel.guild.name})!`).catch(() => {})
-        })
+        msg.channel.createMessage('You lack the permissions needed to use **livestats**! Needed: **Administrator**, **Manage Server**, or server ownership')
       }
     } else {
       msg.author.getDMChannel().then((c) => {
