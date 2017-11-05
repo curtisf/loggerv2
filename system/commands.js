@@ -834,12 +834,12 @@ Commands.livestats = {
                       if (banserror || auditerror) {
                         fields.push({
                           'name': 'Ban Count',
-                          'value': 'Missing Permissions'
+                          'value': '► Missing Permissions'
                         })
                       } else {
                         fields.push({
                           'name': 'Ban Count',
-                          'value': `${b.length === 0 ? '0' : `**${b.length}** | Latest Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`}`
+                          'value': `► ${b.length === 0 ? '0' : `**${b.length}** | Latest Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`}`
                         })
                       }
                       m.edit({ content: '**Live Stats**',
