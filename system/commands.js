@@ -799,9 +799,9 @@ Commands.livestats = {
     let botPerms = msg.channel.guild.members.get(bot.user.id).permission.json
     let loadToRedis = require('../handlers/read').loadToRedis
     let updateGuildDocument = require('../handlers/update').updateGuildDocument
-    let allowed = checkIfAllowed(msg)
+    let userPerms = msg.member.permission.json
     if (msg.channel.permissionsOf(bot.user.id).json.sendMessages) {
-      if (allowed) {
+      if (msg.author.id === msg.channel.guild.ownerID || userPerms.administrator || userPerms.manageGuild) {
         if (botPerms.sendMessage) {
           msg.channel.createMessage('Setting overview message.').then((m) => {
             updateGuildDocument(msg.channel.guild.id, {'overviewID': `${m.channel.id}|${m.id}`}).then((res) => {
