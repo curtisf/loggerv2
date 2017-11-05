@@ -1,10 +1,12 @@
 import { sendToLog } from '../system/modlog'
+import { updateOverview } from '../handlers/read'
 
 module.exports = {
   name: 'guildMemberRemove',
   type: 'guildMemberRemove',
   toggleable: true,
   run: function (bot, raw) {
+    updateOverview(raw.guild.id)
     let guild = raw.guild
     let member = raw.member
     if (member.id !== bot.user.id) {

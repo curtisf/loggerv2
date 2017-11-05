@@ -1,10 +1,12 @@
 import { sendToLog } from '../system/modlog'
+import { updateOverview } from '../handlers/read'
 
 module.exports = {
   name: 'guildRoleCreate',
   type: 'guildRoleCreate',
   toggleable: true,
   run: function (bot, raw) {
+    updateOverview(raw.guild.id)
     let role = raw.role
     raw.guild.getAuditLogs(1, null, 30).then((log) => {
       let obj = {

@@ -1,5 +1,7 @@
 import { badMessageCheck } from '../system/utils'
 import { sendToLog } from '../system/modlog'
+import { Redis } from '../Logger'
+import { updateGuildDocument } from '../handlers/update'
 
 module.exports = {
   name: 'messageUpdate',
@@ -8,7 +10,24 @@ module.exports = {
   run: function (bot, raw) {
     let newMessage = raw.newMessage
     let oldMessage = raw.oldMessage
-    if (!newMessage.author.bot && newMessage.author.id !== bot.user.id && !badMessageCheck(newMessage.content) && oldMessage.content !== newMessage.content) { // added content check due to phantom message_update events
+    if (newMessage.author.id === bot.user.id) {
+
+    } else if (newMessage.author.bot) {
+      Redis.existsAsync(`${newMessage.channel.guild.id}:logBots`).then((exist) => {
+        if (exist) {
+          Redis.getAsync(`${newMessage.channel.guild.id}:logBots`).then((res) => {
+            if (res === 'true') {
+              processMessage(newMessage, oldMessage)
+            }
+          })
+        } else {
+          updateGuildDocument(newMessage.channel.guild.id, { 'logBots': false })
+        }
+      })
+    } else if (!badMessageCheck(newMessage.content) && newMessage.content !== oldMessage.content) {
+      processMessage(newMessage, oldMessage)
+    }
+    function processMessage (newMessage, oldMessage) {
       let obj = {
         guildID: newMessage.channel.guild.id,
         channelID: newMessage.channel.id,

@@ -20,7 +20,9 @@ function createGuild (guild) {
     'ignoredChannels': [],
     'disabledEvents': ['voiceChannelJoin', 'voiceChannelLeave', 'voiceChannelSwitch'],
     'logchannel': '',
-    'ownerID': guild.ownerID
+    'ownerID': guild.ownerID,
+    'overviewID': '',
+    'logBots': false
   }).run().then((r) => {
     if (r.inserted) {
       let owner = bot.users.find(u => u.id === guild.ownerID)

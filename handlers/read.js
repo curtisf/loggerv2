@@ -1,6 +1,7 @@
 import { bot, Redis } from '../Logger'
 import { log } from '../system/log'
 import { recoverGuild } from './create'
+import { updateGuildDocument } from './update'
 import { r } from '../system/rethinkclient'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
@@ -53,6 +54,78 @@ function addChannelToRedis (guildID, cb) {
   })
 }
 
+function updateOverview (guildID) {
+  let guild = bot.guilds.get(guildID)
+  Redis.existsAsync(`${guild.id}:overviewID`).then((res) => {
+    if (res) {
+      Redis.getAsync(`${guild.id}:overviewID`).then((overview) => {
+        if (overview) {
+          let split = overview.split('|')
+          let channelID = split[0]
+          let messageID = split[1]
+          let fields = [
+            {
+              'name': 'Member Count',
+              'value': `► **${guild.memberCount}** total\n► **${guild.members.filter(m => !m.bot).length}** humans\n► **${guild.members.filter(m => m.bot).length}** bots`
+            },
+            {
+              'name': 'Channels',
+              'value': `► **${guild.channels.filter(c => c.type === 4).length}** categories/category\n► **${guild.channels.filter(c => c.type === 0).length}** text channels\n► **${guild.channels.filter(c => c.type === 2).length}** voice channels`
+            },
+            {
+              'name': 'Role Count',
+              'value': `► ${guild.roles.size}`
+            }
+          ]
+          guild.getBans().then((b, banserror) => {
+            guild.getAuditLogs(1, null, 22).then((log, auditerror) => {
+              log = log.entries[0]
+              let user = log.user
+              bot.getRESTUser(log.targetID).then((affected) => {
+                log.guild = []
+                if (banserror || auditerror) {
+                  fields.push({
+                    'name': 'Ban Count',
+                    'value': 'Missing Permissions'
+                  })
+                } else {
+                  fields.push({
+                    'name': 'Ban Count',
+                    'value': `${b.length === 0 ? '0' : `**${b.length}** | Latest Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`}`
+                  })
+                }
+                bot.editMessage(channelID, messageID, {
+                  content: '**Live Stats**',
+                  embed: {
+                    'title': `${guild.name}`,
+                    'description': 'I will update with events that occur',
+                    'color': 7923697,
+                    'timestamp': new Date(),
+                    'footer': {
+                      'icon_url': bot.users.get(guild.ownerID).avatarURL ? bot.users.get(guild.ownerID).avatarURL : bot.users.get(guild.ownerID).defaultAvatarURL,
+                      'text': `${bot.users.get(guild.ownerID).username}#${bot.users.get(guild.ownerID).discriminator}`
+                    },
+                    'thumbnail': {
+                      'url': guild.iconURL ? guild.iconURL : 'https://static1.squarespace.com/static/5937e362be659441f72e7c12/t/595120eadb29d60c5983e4a2/1498489067243/Sorry-image-not-available.png'
+                    },
+                    'fields': fields
+                  }
+                }).catch(() => {
+                  updateGuildDocument(guild.id, { 'overviewID': '' }).then((res) => {
+                    if (res === true) {
+                      loadToRedis(guild.id)
+                    }
+                  })
+                })
+              })
+            })
+          })
+        }
+      })
+    }
+  })
+}
+
 function getUserDocument (userID) {
   return new Promise((resolve, reject) => {
     r.db('Logger').table('Users').get(userID).run().then((doc) => {
@@ -85,6 +158,8 @@ function loadToRedis (guildID) {
       Redis.set(`${guildID}:disabledEvents`, doc.disabledEvents.toString())
       Redis.del(`${guildID}:logchannel`)
       Redis.set(`${guildID}:logchannel`, doc.logchannel.toString()) // no need to expire.
+      Redis.set(`${guildID}:overviewID`, doc.overviewID)
+      Redis.set(`${guildID}:logBots`, doc.logBots)
     } else {
       log.warn(`Missing doc for guild id ${guildID}, recovering.`)
       recoverGuild(guildID)
@@ -92,4 +167,4 @@ function loadToRedis (guildID) {
   })
 }
 
-export { getLogChannel, getUserDocument, getGuildDocument, loadToRedis }
+export { getLogChannel, getUserDocument, getGuildDocument, loadToRedis, updateOverview }

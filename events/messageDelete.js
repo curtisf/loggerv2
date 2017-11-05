@@ -1,5 +1,7 @@
 import { badMessageCheck } from '../system/utils'
 import { sendToLog } from '../system/modlog'
+import { Redis } from '../Logger'
+import { updateGuildDocument } from '../handlers/update'
 
 module.exports = {
   name: 'messageDelete',
@@ -17,7 +19,24 @@ module.exports = {
       obj.changed = `**⚠ Non-Cached Message Deleted**\n${obj.changed}`
       sendToLog(bot, obj)
     } else {
-      if (msg.author.id !== bot.user.id && !badMessageCheck(msg.content) && !msg.author.bot) {
+      if (msg.author.id === bot.user.id) {
+
+      } else if (msg.author.bot) {
+        Redis.existsAsync(`${msg.channel.guild.id}:logBots`).then((exist) => {
+          if (exist) {
+            Redis.getAsync(`${msg.channel.guild.id}:logBots`).then((res) => {
+              if (res === 'true') {
+                processMessage(msg)
+              }
+            })
+          } else {
+            updateGuildDocument(msg.channel.guild.id, { 'logBots': false })
+          }
+        })
+      } else if (!badMessageCheck(msg.content)) {
+        processMessage(msg)
+      }
+      function processMessage (msg) {
         if (msg.attachments.length !== 0) {
           sendToLog(bot, {
             guildID: msg.channel.guild.id,

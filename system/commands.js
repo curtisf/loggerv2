@@ -720,15 +720,24 @@ Commands.serverinfo = {
         value: '**None**'
       })
     }
+    require('../handlers/read').getGuildDocument(msg.channel.guild.id).then((doc) => {
+      fields.push({
+        name: 'Disabled Events',
+        value: `${doc.disabledEvents.length !== 0 ? `\`\`\`${doc.disabledEvents.join(', ')}\`\`\`` : 'All are enabled'}`
+      })
+      send()
+    })
 
-    msg.channel.createMessage({embed: {
-      timestamp: new Date(msg.timestamp),
-      color: 3191403,
-      thumbnail: {
-        url: guild.iconURL ? guild.iconURL : `http://www.kalahandi.info/wp-content/uploads/2016/05/sorry-image-not-available.png`
-      },
-      fields: fields
-    }}).catch(() => {})
+    function send () {
+      msg.channel.createMessage({embed: {
+        timestamp: new Date(msg.timestamp),
+        color: 3191403,
+        thumbnail: {
+          url: guild.iconURL ? guild.iconURL : `http://www.kalahandi.info/wp-content/uploads/2016/05/sorry-image-not-available.png`
+        },
+        fields: fields
+      }}).catch(() => {})
+    }
   }
 }
 
@@ -779,6 +788,140 @@ Commands.auditlogs = {
             fields: fields
           }}).catch(() => {})
       })
+    }
+  }
+}
+
+Commands.livestats = {
+  name: 'livestats',
+  desc: 'I\'ll create a message and edit it when something happens with server info.',
+  func: function (msg, suffix, bot) {
+    let botPerms = msg.channel.guild.members.get(bot.user.id).permission.json
+    let loadToRedis = require('../handlers/read').loadToRedis
+    let updateGuildDocument = require('../handlers/update').updateGuildDocument
+    let allowed = checkIfAllowed(msg)
+    if (msg.channel.permissionsOf(bot.user.id).json.sendMessages) {
+      if (allowed) {
+        if (botPerms.sendMessage) {
+          msg.channel.createMessage('Setting overview message.').then((m) => {
+            updateGuildDocument(msg.channel.guild.id, {'overviewID': `${m.channel.id}|${m.id}`}).then((res) => {
+              if (res === true) {
+                msg.channel.createMessage(`<@${msg.author.id}>, if you want to stop the overview from being updated, just delete the message.`).then((mes) => {
+                  setTimeout(() => {
+                    mes.delete()
+                  }, 10000)
+                })
+                loadToRedis(msg.channel.guild.id)
+                let fields = [
+                  {
+                    'name': 'Member Count',
+                    'value': `► **${m.channel.guild.memberCount}** total\n► **${m.channel.guild.members.filter(m => !m.bot).length}** humans\n► **${m.channel.guild.members.filter(m => m.bot).length}** bots`
+                  },
+                  {
+                    'name': 'Channels',
+                    'value': `► **${m.channel.guild.channels.filter(c => c.type === 4).length}** categories/category\n► **${m.channel.guild.channels.filter(c => c.type === 0).length}** text channels\n► **${m.channel.guild.channels.filter(c => c.type === 2).length}** voice channels`
+                  },
+                  {
+                    'name': 'Role Count',
+                    'value': `► ${msg.channel.guild.roles.size}`
+                  }
+                ]
+                msg.channel.guild.getBans().then((b, banserror) => {
+                  msg.channel.guild.getAuditLogs(1, null, 22).then((log, auditerror) => {
+                    log = log.entries[0]
+                    let user = log.user
+                    bot.getRESTUser(log.targetID).then((affected) => {
+                      if (banserror || auditerror) {
+                        fields.push({
+                          'name': 'Ban Count',
+                          'value': 'Missing Permissions'
+                        })
+                      } else {
+                        fields.push({
+                          'name': 'Ban Count',
+                          'value': `${b.length === 0 ? '0' : `**${b.length}** | Latest Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`}`
+                        })
+                      }
+                      m.edit({ content: '**Live Stats**',
+                        embed: {
+                          'title': `${msg.channel.guild.name}`,
+                          'description': 'I will update with events that occur',
+                          'color': 7923697,
+                          'timestamp': new Date(m.timestamp),
+                          'footer': {
+                            'icon_url': bot.users.get(m.channel.guild.ownerID).avatarURL ? bot.users.get(m.channel.guild.ownerID).avatarURL : bot.users.get(m.channel.guild.ownerID).defaultAvatarURL,
+                            'text': `${bot.users.get(m.channel.guild.ownerID).username}#${bot.users.get(m.channel.guild.ownerID).discriminator}`
+                          },
+                          'thumbnail': {
+                            'url': m.channel.guild.iconURL ? m.channel.guild.iconURL : 'https://static1.squarespace.com/static/5937e362be659441f72e7c12/t/595120eadb29d60c5983e4a2/1498489067243/Sorry-image-not-available.png'
+                          },
+                          'fields': fields
+                        }})
+                    })
+                  })
+                })
+              } else {
+                m.edit('An error occured while setting the overview message, please try again later.')
+                log.error(`Error while setting overview for guild ${msg.channel.guild.name} (${msg.channel.guild.id}):`, res)
+              }
+            })
+          })
+        } else {
+          msg.channel.createMessage('You lack the permissions needed to use **livestats**! Needed: **Administrator**, **Manage Server**, or server ownership')
+        }
+      } else {
+        msg.author.getDMChannel().then((c) => {
+          c.createMessage(`I can't send messages to **${msg.channel.name}** (${msg.channel.guild.name})!`).catch(() => {})
+        })
+      }
+    } else {
+      msg.author.getDMChannel().then((c) => {
+        c.createMessage(`I can't send messages to **${msg.channel.name}** (${msg.channel.guild.name})!`).catch(() => {})
+      })
+    }
+  }
+}
+
+Commands.logbots = {
+  name: 'logbots',
+  desc: 'Toggle whether I will log when bots delete/edit messages!',
+  func: function (msg, suffix, bot) {
+    let loadToRedis = require('../handlers/read').loadToRedis
+    let getGuildDocument = require('../handlers/read').getGuildDocument
+    let updateGuildDocument = require('../handlers/update').updateGuildDocument
+    let allowed = checkIfAllowed(msg)
+    if (allowed) {
+      getGuildDocument(msg.channel.guild.id).then((doc) => {
+        console.log(doc)
+        if (doc.logBots === undefined) {
+          updateGuildDocument(msg.channel.guild.id, { 'logBots': false }).then((res) => {
+            if (res === true) {
+              console.log('recovered')
+              console.log('calling myself owo')
+              Commands['logbots'].func(msg, suffix, bot)
+              loadToRedis(msg.channel.guild.id)
+            } else {
+              console.log('error logbots', res)
+              msg.channel.createMessage('An error occurred while changing whether I log messages edited/deleted by bots, please try again later.')
+            }
+          })
+        } else {
+          console.log(`Now is ${doc.logBots} | Want to set it to ${!doc.logBots}`)
+          updateGuildDocument(msg.channel.guild.id, { 'logBots': !doc.logBots }).then((res) => {
+            if (res === true) {
+              console.log(`BEFORE: ${doc.logBots} | NOW: ${!doc.logBots}`)
+              console.log('well, I did get to update the doc')
+              msg.channel.createMessage(`<@${msg.author.id}>, ${doc.logBots ? 'I will not log messages edited or deleted by bots anymore!' : 'I will now log messages edited or deleted by bots!'}`)
+              loadToRedis(msg.channel.guild.id)
+            } else {
+              console.log('error while logbots', res)
+              msg.channel.createMessage(`<@${msg.author.id}>, an error occurred while changing whether I log bots, please try again.`)
+            }
+          })
+        }
+      })
+    } else {
+      msg.channel.createMessage(`<@${msg.author.id}>, you lack the permissions to say whether I log bots or not! Needed: **Administrator**, **Manage Server**, or server ownership`)
     }
   }
 }

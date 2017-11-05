@@ -1,11 +1,13 @@
 import { Redis } from '../Logger'
 import { sendToLog } from '../system/modlog'
+import { updateOverview } from '../handlers/read'
 
 module.exports = {
   name: 'guildMemberAdd',
   type: 'guildMemberAdd',
   toggleable: true,
   run: function (bot, raw) {
+    updateOverview(raw.guild.id)
     let guild = raw.guild
     let member = raw.member
     if (member) {

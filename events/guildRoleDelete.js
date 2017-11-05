@@ -1,10 +1,12 @@
 import { sendToLog } from '../system/modlog'
+import { updateOverview } from '../handlers/read'
 
 module.exports = {
   name: 'guildRoleDelete',
   type: 'guildRoleDelete',
   toggleable: true,
   run: function (bot, raw) {
+    updateOverview(raw.guild.id)
     let guild = raw.guild
     let role = raw.role
     let keys

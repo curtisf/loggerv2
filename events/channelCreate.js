@@ -1,10 +1,12 @@
 import { sendToLog } from '../system/modlog'
+import { updateOverview } from '../handlers/read'
 
 module.exports = {
   name: 'channelCreate',
   type: 'channelCreate',
   toggleable: true,
   run: function (bot, channel) {
+    updateOverview(channel.guild.id)
     let type
     if (channel.type === 0) {
       type = 'Text'

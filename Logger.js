@@ -13,11 +13,13 @@ let bot
 if (Config.shardMode === true) {
   bot = new Eris(Config.core.token, {
     getAllUsers: true,
-    maxShards: Config.shardCount
+    maxShards: Config.shardCount,
+    restMode: true
   })
 } else {
   bot = new Eris(Config.core.token, {
-    getAllUsers: true
+    getAllUsers: true,
+    restMode: true
   })
 }
 bluebird.promisifyAll(redis.RedisClient.prototype)

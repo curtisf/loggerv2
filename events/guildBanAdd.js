@@ -1,10 +1,12 @@
 import { sendToLog } from '../system/modlog'
+import { updateOverview } from '../handlers/read'
 
 module.exports = {
   name: 'guildBanAdd',
   type: 'guildBanAdd',
   toggleable: true,
   run: function (bot, raw) {
+    updateOverview(raw.guild.id)
     let banned = raw.user
     let guild = raw.guild
     let obj = {
