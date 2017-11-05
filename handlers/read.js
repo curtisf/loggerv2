@@ -154,13 +154,13 @@ function getGuildDocument (guildID) {
 function loadToRedis (guildID) {
   r.db('Logger').table('Guilds').get(guildID).run().then((doc) => {
     if (doc) {
-      if (!doc.logBots) {
-        updateGuildDocument(guildID, { 'logBots': '' }).then(() => {
+      if (!doc.logBots || !doc.overviewID) {
+        updateGuildDocument(guildID, { 'logBots': doc.logBots ? doc.logBots : '', 'overviewID': doc.overviewID ? doc.overviewID : '' }).then(() => {
           Redis.set(`${guildID}:ignoredChannels`, doc.ignoredChannels.toString())
           Redis.set(`${guildID}:disabledEvents`, doc.disabledEvents.toString())
           Redis.del(`${guildID}:logchannel`)
           Redis.set(`${guildID}:logchannel`, doc.logchannel.toString()) // no need to expire.
-          Redis.set(`${guildID}:overviewID`, doc.overviewID)
+          Redis.set(`${guildID}:overviewID`, '')
           Redis.set(`${guildID}:logBots`, '')
         })
       } else {

@@ -892,29 +892,21 @@ Commands.logbots = {
     let allowed = checkIfAllowed(msg)
     if (allowed) {
       getGuildDocument(msg.channel.guild.id).then((doc) => {
-        console.log(doc)
         if (doc.logBots === undefined) {
           updateGuildDocument(msg.channel.guild.id, { 'logBots': false }).then((res) => {
             if (res === true) {
-              console.log('recovered')
-              console.log('calling myself owo')
               Commands['logbots'].func(msg, suffix, bot)
               loadToRedis(msg.channel.guild.id)
             } else {
-              console.log('error logbots', res)
               msg.channel.createMessage('An error occurred while changing whether I log messages edited/deleted by bots, please try again later.')
             }
           })
         } else {
-          console.log(`Now is ${doc.logBots} | Want to set it to ${!doc.logBots}`)
           updateGuildDocument(msg.channel.guild.id, { 'logBots': !doc.logBots }).then((res) => {
             if (res === true) {
-              console.log(`BEFORE: ${doc.logBots} | NOW: ${!doc.logBots}`)
-              console.log('well, I did get to update the doc')
               msg.channel.createMessage(`<@${msg.author.id}>, ${doc.logBots ? 'I will not log messages edited or deleted by bots anymore!' : 'I will now log messages edited or deleted by bots!'}`)
               loadToRedis(msg.channel.guild.id)
             } else {
-              console.log('error while logbots', res)
               msg.channel.createMessage(`<@${msg.author.id}>, an error occurred while changing whether I log bots, please try again.`)
             }
           })
