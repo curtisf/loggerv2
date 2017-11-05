@@ -157,13 +157,13 @@ function loadToRedis (guildID) {
   r.db('Logger').table('Guilds').get(guildID).run().then((doc) => {
     if (doc) {
       if (doc.logBots === undefined || doc.overviewID === undefined) {
-        updateGuildDocument(guildID, { 'logBots': doc.logBots !== undefined ? doc.logBots : '', 'overviewID': doc.overviewID !== undefined ? doc.overviewID : '' }).then(() => {
+        updateGuildDocument(guildID, { 'logBots': doc.logBots !== undefined || doc.logBots !== '' ? doc.logBots : false, 'overviewID': doc.overviewID !== undefined ? doc.overviewID : '' }).then(() => {
           Redis.set(`${guildID}:ignoredChannels`, doc.ignoredChannels.toString())
           Redis.set(`${guildID}:disabledEvents`, doc.disabledEvents.toString())
           Redis.del(`${guildID}:logchannel`)
           Redis.set(`${guildID}:logchannel`, doc.logchannel.toString()) // no need to expire.
           Redis.set(`${guildID}:overviewID`, '')
-          Redis.set(`${guildID}:logBots`, '')
+          Redis.set(`${guildID}:logBots`, false)
         })
       } else {
         Redis.set(`${guildID}:ignoredChannels`, doc.ignoredChannels.toString())
