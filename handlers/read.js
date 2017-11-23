@@ -120,7 +120,7 @@ function updateOverview (guildID) {
                   })
                 })
               })
-            })
+            }).catch(() => {})
           }
         })
       }
