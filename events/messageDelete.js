@@ -64,7 +64,7 @@ module.exports = {
             simple: `A message with an attachment created by **${msg.author.username}#${msg.author.discriminator}** was deleted in ${msg.channel.name}.`
           })
         } else if (msg.embeds.length !== 0) {
-          sendToLog(this.name, bot, {
+          sendToLog(module.exports.name, bot, {
             guildID: msg.channel.guild.id,
             channelID: msg.channel.id,
             type: 'Message Deleted',
