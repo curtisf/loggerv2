@@ -21,7 +21,8 @@ module.exports = {
       guild.getAuditLogs(1, null, 32).then((entry) => {
         let user = entry.entries[0].user
         obj.from = user
-        sendToLog(bot, obj)
+        obj.simple = `**${user.username}#${user.discriminator}** deleted a role which I don't know.`
+        sendToLog(this.name, bot, obj)
       }).catch(() => {})
     }
     let perms = []
@@ -43,7 +44,8 @@ module.exports = {
     guild.getAuditLogs(1, null, 32).then((entry) => {
       let user = entry.entries[0].user
       obj.from = user
-      sendToLog(bot, obj)
+      obj.simple = `**${user.username}#${user.discriminator}** deleted role: ${role.name}`
+      sendToLog(this.name, bot, obj)
     }).catch(() => {})
   }
 }

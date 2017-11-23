@@ -1,10 +1,34 @@
 import { getLogChannel } from '../handlers/read'
 import { log } from './log'
+import { Redis } from '../Logger'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
 Raven.config(Config.raven.url).install()
 
-function sendToLog (bot, obj, optGuild, optChannel, fields) {
+let typeCategoryMap = {
+  channelCreate: 'server',
+  channelUpdate: 'server',
+  channelDelete: 'server',
+  guildBanAdd: 'mod',
+  guildBanRemove: 'mod',
+  guildRoleCreate: 'server',
+  guildRoleDelete: 'server',
+  guildRoleUpdate: 'server',
+  guildUpdate: 'server',
+  messageDelete: 'messages',
+  messageDeleteBulk: 'messages',
+  messageReactionRemoveAll: 'messages',
+  messageUpdate: 'messages',
+  guildMemberAdd: 'joinlog',
+  guildMemberRemove: 'joinlog',
+  guildMemberUpdate: 'mod',
+  voiceChannelLeave: 'voice',
+  voiceChannelJoin: 'voice',
+  voiceChannelSwitch: 'voice',
+  guildEmojisUpdate: 'server'
+}
+
+function sendToLog (type, bot, obj, optGuild, optChannel, fields) {
   if (optGuild) {
     getLogChannel(optGuild).then((channel) => {
       if (channel !== false) {
@@ -75,18 +99,35 @@ function sendToLog (bot, obj, optGuild, optChannel, fields) {
       })
     }
 
+    let messageObj = {}
+    messageObj.embed = abstractEmbed
+
+    if (obj.simple) {
+      messageObj.content = obj.simple
+    }
+
     getLogChannel(obj.guildID).then((channel) => {
       if (channel !== false) {
         if (obj.channelID) {
           if (channel.id !== obj.channelID) {
-            channel.createMessage({
-              embed: abstractEmbed
-            }).catch(() => {})
+            channel.createMessage(messageObj).catch(() => {})
           }
         } else {
-          channel.createMessage({
-            embed: abstractEmbed
-          }).catch(() => {})
+          channel.createMessage(messageObj).catch(() => {})
+        }
+      }
+    })
+    Redis.getAsync(`${obj.guildID}:feeds`).then((feeds) => {
+      feeds = JSON.parse(feeds)
+      let ch
+      if (feeds[typeCategoryMap[type]].channelID) {
+        if (Object.keys(feeds).filter(k => feeds[k].channelID === obj.channelID).length !== 0 && (type === 'messageDelete' || type === 'messageDeleteBulk' || type === 'messageUpdate')) {} else {
+          try {
+            ch = bot.getChannel(feeds[typeCategoryMap[type]].channelID)
+          } catch (_) {}
+          if (ch) {
+            ch.createMessage(messageObj).catch(() => {})
+          }
         }
       }
     })

@@ -46,30 +46,33 @@ module.exports = {
           type: `${key} Role`,
           changed: `► Name: **${member.username}#${member.discriminator}**\n► Role ${key}: **${role.name}**\n► Role ID: **${role.id}**`,
           color: role.color ? role.color : 8351671,
-          against: member
+          against: member,
+          simple: `**${user.username}#${user.discriminator}** affecting **${member.username}#${member.discriminator}** ${key.toLowerCase()} role ${role.name}`
         }
         obj.footer = {
           text: `${key} by ${user.username}#${user.discriminator}`,
           icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
         }
-        sendToLog(bot, obj)
+        sendToLog(this.name, bot, obj)
       }).catch(() => {
+        obj.simple = `Unknown role change affecting **${member.username}#${member.discriminator}**`
         obj.footer = {
           text: 'I cannot view audit logs!',
           icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
         }
-        sendToLog(bot, obj)
+        sendToLog(this.name, bot, obj)
       })
     } else if (member.nick !== oldMember.nick) {
       if (member.nick) {
         addNewName(member.id, member.nick)
       }
-      sendToLog(bot, {
+      sendToLog(this.name, bot, {
         guildID: guild.id,
         type: 'Nickname Changed',
         changed: `► Now: **${member.nick ? member.nick : member.username}#${member.discriminator}**\n► Was: **${oldMember.nick ? oldMember.nick : member.username}#${member.discriminator}**\n► ID: **${member.id}**`,
         color: 8351671,
-        against: member
+        against: member,
+        simple: `Nickname change involving **${member.username}**: changed from **${oldMember.nick ? oldMember.nick : member.username}#${member.discriminator}** to **${member.nick ? member.nick : member.username}#${member.discriminator}**.`
       })
     }
   }

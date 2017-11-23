@@ -12,24 +12,26 @@ module.exports = {
     if (now.position === before.position) {
       if (now.permissionOverwrites.size > before.permissionOverwrites.size) {
         guild.getAuditLogs(1, null, 13).then((log) => {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Created',
             changed: `► Channel: **${now.name}** (${now.id})\n► Type: **${log.entries[0].role ? 'Role' : 'Member'}**\n► Against: **${log.entries[0].role ? `${log.entries[0].role.name}` : `${log.entries[0].member.username}#${log.entries[0].member.discriminator}`}**`,
             color: 8351671,
+            simple: `Channel overwrite created by **${log.entries[0].user.username}#${log.entries[0].user.discriminator}** in **${now.name}**`,
             footer: {
               text: `Created by ${log.entries[0].user.username}#${log.entries[0].user.discriminator}`,
               icon_url: `${log.entries[0].user.avatar ? `https://cdn.discordapp.com/avatars/${log.entries[0].user.id}/${log.entries[0].user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${log.entries[0].user.discriminator % 5}.png`}`
             }
           })
         }).catch(() => {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
+            simple: `Channel overwrite deleted (${now.name})`,
             footer: {
               text: 'I cannot view audit logs!',
               icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
@@ -38,24 +40,26 @@ module.exports = {
         })
       } else if (now.permissionOverwrites.size < before.permissionOverwrites.size) {
         guild.getAuditLogs(1, null, 15).then((log) => {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}** (${now.id})\n► Type: **${log.entries[0].role ? 'Role' : 'Member'}**\n► Against: **${log.entries[0].role ? `${log.entries[0].role.name}` : `${log.entries[0].member.username}#${log.entries[0].member.discriminator}`}**`,
             color: 8351671,
+            simple: `Channel overwrite deleted by **${log.entries[0].user.username}#${log.entries[0].user.discriminator}** in **${now.name}**`,
             footer: {
               text: `Deleted by ${log.entries[0].user.username}#${log.entries[0].user.discriminator}`,
               icon_url: `${log.entries[0].user.avatar ? `https://cdn.discordapp.com/avatars/${log.entries[0].user.id}/${log.entries[0].user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${log.entries[0].user.discriminator % 5}.png`}`
             }
           })
         }).catch(() => {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
+            simple: `Channel overwrite deleted (${now.name})`,
             footer: {
               text: 'I cannot view audit logs!',
               icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
@@ -64,24 +68,26 @@ module.exports = {
         })
       } else if (now.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString() !== before.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString()) {
         guild.getAuditLogs(1, null, 14).then((log) => {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Updated',
             changed: `► Channel: **${now.name}** (${now.id})\n► Type: **${log.entries[0].role ? 'Role' : 'Member'}**\n► Against: **${log.entries[0].role ? `${log.entries[0].role.name}` : `${log.entries[0].member.username}#${log.entries[0].member.discriminator}`}**`,
             color: 8351671,
+            simple: `Channel overwrite updated by **${log.entries[0].user.username}#${log.entries[0].user.discriminator}** in ${now.name})`,
             footer: {
               text: `Updated by ${log.entries[0].user.username}#${log.entries[0].user.discriminator}`,
               icon_url: `${log.entries[0].user.avatar ? `https://cdn.discordapp.com/avatars/${log.entries[0].user.id}/${log.entries[0].user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${log.entries[0].user.discriminator % 5}.png`}`
             }
           })
         }).catch(() => {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
+            simple: `Channel overwrite deleted (${now.name})`,
             footer: {
               text: 'I cannot view audit logs!',
               icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
@@ -116,6 +122,7 @@ module.exports = {
               type: 'Channel Updated',
               changed: `► **Channel Changes**`,
               color: 8351671,
+              simple: `**${user.username}#${user.discriminator}** updated channel ${now.name}`,
               footer: {
                 text: `Updated by ${user.username}#${user.discriminator}`,
                 icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
@@ -124,12 +131,13 @@ module.exports = {
             sendToLog(bot, obj, null, null, changes)
           }
         }).catch(() => {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: guild.id,
             channelID: now.id,
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
+            simple: `Channel overwrite deleted (${now.name})`,
             footer: {
               text: 'I cannot view audit logs!',
               icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'

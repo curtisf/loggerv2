@@ -20,7 +20,8 @@ module.exports = {
       channelID: channel.id,
       type: 'Channel Deleted',
       changed: `► Name: **${channel.name}**\n► Type: **${type}**\n► ID: **${channel.id}**\n► Position: **${channel.position}**`,
-      color: 8351671
+      color: 8351671,
+      simple: `Channel deleted `
     }
     channel.guild.getAuditLogs(1, null, 12).then((log) => {
       if (channel.type === 2) {
@@ -30,17 +31,18 @@ module.exports = {
         obj.changed += `\n► Userlimit: **${channel.userlimit}**`
       }
       let user = log.entries[0].user
+      obj.simple += `by **${user.username}#${user.discriminator}**`
       obj.footer = {
         text: `Deleted by ${user.username}#${user.discriminator}`,
         icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
       }
-      sendToLog(bot, obj)
+      sendToLog(this.name, bot, obj)
     }).catch((e) => {
       obj.footer = {
         text: 'I cannot view audit logs!',
         icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
       }
-      sendToLog(bot, obj)
+      sendToLog(this.name, bot, obj)
     })
   }
 }

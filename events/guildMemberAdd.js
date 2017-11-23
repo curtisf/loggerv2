@@ -15,8 +15,9 @@ module.exports = {
         guildID: guild.id,
         type: 'Member Joined',
         changed: `► Name: **[\`${member.username}#${member.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${member.avatar}.jpg)** (${member.id})\n► Account Age: **${Math.floor((new Date() - member.user.createdAt) / 86400000)}** days\n► Joined At: **${new Date(member.joinedAt).toString().substr(0, 21)}**${member.bot ? '\n► Joined via OAuth invite.' : ''}`,
-        color: 8351671,
-        against: member
+        color: 65355,
+        against: member,
+        simple: `**${member.username}#${member.discriminator}** joined the server.`
       }
       let lastJoin = `${new Date().getTime()}` // automatic stringify
       guild.getInvites().then((invites) => {
@@ -34,20 +35,20 @@ module.exports = {
                         if (lastJoin - lastTime < 8000) {
                           obj.changed += `\n► Possible Raid Detected!`
                           obj.color = 16711680
-                          sendToLog(bot, obj)
+                          sendToLog(this.name, bot, obj)
                           Redis.set(`${guild.id}:lastJoin`, lastJoin) // the nesting is necessary because Redis.set executes faster than getAsync
                         } else {
-                          sendToLog(bot, obj)
+                          sendToLog(this.name, bot, obj)
                           Redis.set(`${guild.id}:lastJoin`, lastJoin)
                         }
                       })
                     } else {
-                      sendToLog(bot, obj)
+                      sendToLog(this.name, bot, obj)
                       Redis.set(`${guild.id}:lastJoin`, lastJoin)
                     }
                   })
                 } else {
-                  sendToLog(bot, obj)
+                  sendToLog(this.name, bot, obj)
                   Redis.del(`${guild.id}:invites`)
                   Redis.set(`${guild.id}:lastJoin`, lastJoin)
                 }
@@ -67,15 +68,15 @@ module.exports = {
                         if (lastJoin - lastTime < 8000) {
                           obj.changed += `\n► Possible Raid Detected!`
                           obj.color = 16711680
-                          sendToLog(bot, obj)
+                          sendToLog(this.name, bot, obj)
                           Redis.set(`${guild.id}:lastJoin`, lastJoin)
                         } else {
-                          sendToLog(bot, obj)
+                          sendToLog(this.name, bot, obj)
                           Redis.set(`${guild.id}:lastJoin`, lastJoin)
                         }
                       })
                     } else {
-                      sendToLog(bot, obj)
+                      sendToLog(this.name, bot, obj)
                       Redis.set(`${guild.id}:lastJoin`, lastJoin)
                     }
                   })
@@ -84,7 +85,7 @@ module.exports = {
                 } else {
                   Redis.set(`${guild.id}:lastJoin`, lastJoin)
                   Redis.set(`${guild.id}:invites`, `${currentInvites}`)
-                  sendToLog(bot, obj)
+                  sendToLog(this.name, bot, obj)
                 }
               }
             })
@@ -100,15 +101,15 @@ module.exports = {
               if (lastJoin - lastTime < 8000) {
                 obj.changed += `\n► Possible Raid Detected!`
                 obj.color = 16711680
-                sendToLog(bot, obj)
+                sendToLog(this.name, bot, obj)
                 Redis.set(`${guild.id}:lastJoin`, lastJoin)
               } else {
-                sendToLog(bot, obj)
+                sendToLog(this.name, bot, obj)
                 Redis.set(`${guild.id}:lastJoin`, lastJoin)
               }
             })
           } else {
-            sendToLog(bot, obj)
+            sendToLog(this.name, bot, obj)
             Redis.set(`${guild.id}:lastJoin`, lastJoin)
           }
         })

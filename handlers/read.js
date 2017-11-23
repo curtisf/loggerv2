@@ -172,6 +172,7 @@ function loadToRedis (guildID) {
         Redis.set(`${guildID}:logchannel`, doc.logchannel.toString()) // no need to expire.
         Redis.set(`${guildID}:overviewID`, doc.overviewID)
         Redis.set(`${guildID}:logBots`, doc.logBots)
+        Redis.set(`${guildID}:feeds`, JSON.stringify(doc.feeds))
       }
     } else {
       log.warn(`Missing doc for guild id ${guildID}, recovering.`)

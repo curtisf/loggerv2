@@ -21,7 +21,9 @@ function handle (type, data, guildID, channelID) {
               Redis.getAsync(`${guildID}:disabledEvents`).then((dEvents) => {
                 if (dEvents.split(',').indexOf(type) === -1) {
                   try {
-                    dir[type].run(bot, data)
+                    Raven.context(() => {
+                      dir[type].run(bot, data)
+                    })
                   } catch (_) {}
                 }
               })

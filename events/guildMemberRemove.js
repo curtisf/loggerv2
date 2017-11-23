@@ -14,8 +14,9 @@ module.exports = {
         guildID: guild.id,
         type: 'Member Left Or Was Kicked',
         changed: '',
-        color: 8351671,
-        against: member
+        color: 16711680,
+        against: member,
+        simple: `**${member.username}#${member.discriminator}** left the server.`
       }
       let roles = []
       member.roles.forEach(r => {
@@ -24,7 +25,7 @@ module.exports = {
         }
       })
       obj.changed = `► Name: **[\`${member.username}#${member.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${member.avatar}.jpg)** (${member.id})\n► Joined At: **${member.joinedAt ? new Date(member.joinedAt).toString().substr(0, 21) : 'Unknown'}**${roles.length !== 0 ? `\n► Roles:\n\`\`\`${roles.join(', ')}\`\`\`` : ''}`
-      sendToLog(bot, obj)
+      sendToLog(this.name, bot, obj)
     }
   }
 }

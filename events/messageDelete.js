@@ -17,7 +17,8 @@ module.exports = {
     }
     if (!msg.timestamp) {
       obj.changed = `**⚠ Non-Cached Message Deleted**\n${obj.changed}`
-      sendToLog(bot, obj)
+      obj.simple = `Unknown message deleted in: **${msg.channel.name}**`
+      sendToLog(this.name, bot, obj)
     } else {
       if (msg.author.id === bot.user.id) {
 
@@ -37,8 +38,18 @@ module.exports = {
         processMessage(msg)
       }
       function processMessage (msg) {
+        msg.mentions.forEach((mention) => {
+          if (msg.channel.guild) { // I'm using this function because the regular cleanContent doesn't include the discriminator of the user
+            var member = msg.channel.guild.members.get(mention.id)
+            if (member && member.nick) {
+              msg.content = msg.content.replace(new RegExp(`<@!?${mention.id}>`, 'g'), '@' + member.nick + '#' + member.discriminator)
+            } else if (member) {
+              msg.content = msg.content.replace(new RegExp(`<@!?${mention.id}>`, 'g'), '@' + mention.username + '#' + mention.discriminator)
+            }
+          }
+        })
         if (msg.attachments.length !== 0) {
-          sendToLog(bot, {
+          sendToLog(module.exports.name, bot, {
             guildID: msg.channel.guild.id,
             channelID: msg.channel.id,
             type: 'Message Deleted',
@@ -49,10 +60,11 @@ module.exports = {
               username: `${msg.author.username}`,
               discriminator: `${msg.author.discriminator}`,
               avatar: `${msg.author.avatar}`
-            }
+            },
+            simple: `A message with an attachment created by **${msg.author.username}#${msg.author.discriminator}** was deleted in ${msg.channel.name}.`
           })
         } else if (msg.embeds.length !== 0) {
-          sendToLog(bot, {
+          sendToLog(this.name, bot, {
             guildID: msg.channel.guild.id,
             channelID: msg.channel.id,
             type: 'Message Deleted',
@@ -63,11 +75,12 @@ module.exports = {
               username: `${msg.author.username}`,
               discriminator: `${msg.author.discriminator}`,
               avatar: `${msg.author.avatar}`
-            }
+            },
+            simple: `A message with an embed created by **${msg.author.username}#${msg.author.discriminator}** was deleted in ${msg.channel.name}.`
           })
-          sendToLog(bot, msg.embeds[0], msg.channel.guild.id, msg.channel.id)
+          sendToLog(module.exports.name, bot, msg.embeds[0], msg.channel.guild.id, msg.channel.id)
         } else {
-          sendToLog(bot, {
+          sendToLog(module.exports.name, bot, {
             guildID: msg.channel.guild.id,
             channelID: msg.channel.id,
             type: 'Message Deleted',
@@ -78,7 +91,8 @@ module.exports = {
               username: `${msg.author.username}`,
               discriminator: `${msg.author.discriminator}`,
               avatar: `${msg.author.avatar}`
-            }
+            },
+            simple: `A message created by **${msg.author.username}#${msg.author.discriminator}** was deleted in ${msg.channel.name}.`
           })
         }
       }

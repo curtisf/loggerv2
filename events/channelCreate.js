@@ -24,17 +24,19 @@ module.exports = {
     }
     channel.guild.getAuditLogs(1, null, 10).then((log) => {
       let user = log.entries[0].user
+      obj.simple = `${type} channel created by **${user.username}#${user.discriminator}**`
       obj.footer = {
         text: `Created by ${user.username}#${user.discriminator}`,
         icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${obj.against.discriminator % 5}.png`}`
       }
-      sendToLog(bot, obj)
+      sendToLog(this.name, bot, obj)
     }).catch(() => {
+      obj.simple = `${type} channel created`
       obj.footer = {
         text: 'I cannot view audit logs!',
         icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
       }
-      sendToLog(bot, obj)
+      sendToLog(this.name, bot, obj)
     })
   }
 }

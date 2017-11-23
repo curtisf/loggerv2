@@ -22,12 +22,13 @@ module.exports = {
         }
       })
       if (fields.length !== 0) {
-        sendToLog(bot, {
+        sendToLog(this.name, bot, {
           guildID: newGuild.id,
           type: 'Guild Updated',
           changed: 'You shouldn\'t be seeing this.',
           color: 8351671,
-          from: log.entries[0].user
+          from: log.entries[0].user,
+          simple: `**${log.entries[0].user.username}#${log.entries[0].user.discriminator}** updated the server.`
         }, null, null, fields)
       }
     }).catch(() => {})

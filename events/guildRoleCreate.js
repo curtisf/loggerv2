@@ -16,14 +16,16 @@ module.exports = {
         color: 8351671
       }
       if (log.users.length === 0) {
+        obj.simple = `Role automatically created from integration.`
         obj.footer = {
           text: 'Automatically Created',
           icon_url: 'http://www.multiwiniahub.com/images/discordIcon2.png'
         }
       } else {
+        obj.simple = `**${log.users[0].username}#${log.users[0].discriminator}** created a new role.`
         obj.from = log.users[0]
       }
-      sendToLog(bot, obj)
+      sendToLog(this.name, bot, obj)
     }).catch(() => {})
   }
 }

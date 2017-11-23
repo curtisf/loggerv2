@@ -25,6 +25,8 @@ body.page
     script(src='/dashboard/js/jquery.min.js')
     h2.text-center.heading Click the box below to see valid logchannels!
     br
+    h4 Beware that this logs all events to the selected channel. If you want more fine tuned usage or different channels for different things, read %help.
+    br
     form(id="logChannelForm", onsubmit="return false").text-center
         input(type="hidden", name='guildID', value='#{guildID}', readonly)
         select(name='channelSelector')
@@ -52,7 +54,6 @@ body.page
             }
         }
         $("#submitB").click(function () {
-            console.log('clicked')
             $.ajax({
                 type:'POST',
                 url:'https://whatezlife.com/dashboard/savechannel',

@@ -28,23 +28,34 @@ module.exports = {
       processMessage(newMessage, oldMessage)
     }
     function processMessage (newMessage, oldMessage) {
+      oldMessage.mentions.forEach((mention) => {
+        if (newMessage.channel.guild) { // absolutely stolen from the Eris Message prototype
+          var member = newMessage.channel.guild.members.get(mention.id)
+          if (member && member.nick) {
+            oldMessage.content = oldMessage.content.replace(new RegExp(`<@!?${mention.id}>`, 'g'), '@' + member.nick + '#' + member.discriminator)
+          } else if (member) {
+            oldMessage.content = oldMessage.content.replace(new RegExp(`<@!?${mention.id}>`, 'g'), '@' + mention.username + '#' + mention.discriminator)
+          }
+        }
+      })
       let obj = {
         guildID: newMessage.channel.guild.id,
         channelID: newMessage.channel.id,
         type: 'Message Updated',
-          changed: `► Previously: \`${oldMessage.content.replace(/\"/g, '"').replace(/`/g, '')}\`\n► Now: \`${newMessage.content.replace(/\"/g, '"').replace(/`/g, '')}\`\n► From **${newMessage.channel.name}**.\n► Message ID: ${newMessage.id}`, // eslint-disable-line
+          changed: `► Previously: \`${oldMessage.content.replace(/\"/g, '"').replace(/`/g, '')}\`\n► Now: \`${newMessage.cleanContent.replace(/\"/g, '"').replace(/`/g, '')}\`\n► From **${newMessage.channel.name}**.\n► Message ID: ${newMessage.id}`, // eslint-disable-line
         color: 8351671,
         against: {
           id: `${newMessage.author.id}`,
           username: `${newMessage.author.username}`,
           discriminator: `${newMessage.author.discriminator}`,
           avatar: `${newMessage.author.avatar}`
-        }
+        },
+        simple: `**${newMessage.author.username}#${newMessage.author.discriminator}** updated their message in: ${newMessage.channel.name}.`
       }
       if (newMessage.author.avatarURL) {
         obj.against.thumbnail = `https://cdn.discordapp.com/avatars/${newMessage.author.id}/${newMessage.author.avatar}.jpg`
       }
-      sendToLog(bot, obj)
+      sendToLog(module.exports.name, bot, obj)
     }
   }
 }

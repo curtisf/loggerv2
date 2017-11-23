@@ -23,7 +23,7 @@
         "use": false
     },
     "misc": {
-        "defaultGame": "LoggerV2 | %setchannel | https://whatezlife.com/logger/"
+        "defaultGame": "LoggerV2 | %setchannel | https://whatezlife.com/dashboard/"
     },
     "commands": {
         "eval": ["212445217763229699"]

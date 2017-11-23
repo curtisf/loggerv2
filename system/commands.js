@@ -15,6 +15,7 @@ Object.keys(eventsObj).map((event) => eventsObj[event]).map((event) => event.typ
   }
 })
 let Commands = []
+let validFeeds = ['mod', 'voice', 'messages', 'server', 'joinlog']
 
 let notablePermissions = [
   'kickMembers',
@@ -120,51 +121,146 @@ Commands.eval = {
 
 Commands.setchannel = {
   name: 'setchannel',
-  desc: 'Use in the channel you want me to log to, or mention it as a suffix (%setchannel #channelname | %setchannel)',
+  desc: 'This command will let you set one channel to log all events to, or multiple, divided feeds. Usage: \n\n`%setchannel` - Log all actions to the current channel\n\n`%setchannel [server, mod, messages, voice, joinlog]` - Log that preset of actions to the current channel\n\n`%setchannel #channel` - Log all actions to the mentioned channel\n\n`%setchannel #channel [server, mod, messages, voice, joinlog]` - Log that preset of actions to the mentioned channel',
   func: function (msg, suffix, bot) {
     let allowed = checkIfAllowed(msg)
     let botPerms = msg.channel.guild.members.get(bot.user.id).permission.json
     let loadToRedis = require('../handlers/read').loadToRedis
+    let getGuildDocument = require('../handlers/read').getGuildDocument
+    let updateGuildDocument = require('../handlers/update').updateGuildDocument
     if (botPerms.sendMessages) {
       if (allowed) {
         if (suffix) {
-          let channelID = suffix.replace(/<|>|#/g, '') // replace <, >, and # just incase a user specifies a channel
-          let channel = msg.channel.guild.channels.filter(c => c.id === channelID)
-          if (channel.length !== 0) {
-            if (channel[0].permissionsOf(bot.user.id).json.sendMessages) {
-              require('../handlers/update').updateGuildDocument(msg.channel.guild.id, {
-                'logchannel': channel[0].id
-              }).then((r) => {
-                if (r === true) {
-                  msg.channel.createMessage(`<@${msg.author.id}>, I will now log actions to **${channel[0].name}**!`).catch(() => {})
-                  channel[0].createMessage(`I was told to log here by **${msg.member.nick ? msg.member.nick : msg.author.username}#${msg.author.discriminator}**. I ignore anything that happens in this channel (message edit, delete).`).catch(() => {})
-                  loadToRedis(msg.channel.guild.id)
+          let splitSuffix = suffix.replace(/<|>|#/g, '').split(' ')
+          let ch
+          try {
+            ch = bot.getChannel(splitSuffix[0])
+          } catch (_) {}
+          if (splitSuffix.length === 2) {
+            if (ch && validFeeds.includes(splitSuffix[1])) {
+              getGuildDocument(msg.channel.guild.id).then((doc) => {
+                if (doc && ch.id !== doc.logchannel && Object.keys(doc.feeds).filter(key => doc.feeds[key].channelID === ch.id).length === 0) {
+                  if ((doc.logchannel && (splitSuffix[1] === 'joinlog' || splitSuffix[1] === 'mod')) || !doc.logchanel) {
+                    doc.feeds[splitSuffix[1]].channelID = ch.id
+                    updateGuildDocument(msg.channel.guild.id, { 'feeds': doc.feeds }).then((response) => {
+                      if (response === true) {
+                        msg.channel.createMessage(`<@${msg.author.id}>, I will now log **${splitSuffix[1]}** related actions to **${ch.name}**`)
+                      } else {
+                        msg.channel.createMessage(`<@${msg.author.id}>, something went wrong.`)
+                        log.error(response)
+                      }
+                    })
+                  }
                 } else {
-                  msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => {})
-                  log.error(`Error while setting channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`).catch(() => {})
-                  log.error(r)
+                  let reason
+                  if (doc.logchannel) {
+                    reason = `I'm already logging **all** actions to **${bot.getChannel(doc.logchannel).name}**! Go to <#${bot.getChannel(doc.logchannel).id}> and type \`%clearchannel\` to stop logging there`
+                  }
+                  if (!reason) {
+                    Object.keys(doc.feeds).forEach((key) => {
+                      if (doc.feeds[key].channelID === ch.id) {
+                        reason = `I'm already logging **${key}** actions to **${ch.name}**! Go to <#${ch.id}> and type \`%clearchannel\` to stop logging there`
+                      }
+                    })
+                  }
+                  msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log to **${ch.name}**! Reason: ${reason}.`}})
                 }
               })
             } else {
-              msg.author.getDMChannel().then((c) => {
-                c.createMessage(`I can't send messages to **${channel[0].name}**!`)
-              }).catch(() => {})
+              msg.channel.createMessage({ embed: { color: 16711680, description: `Incorrect usage. Read %help and try again.`}})
             }
+          } else if (msg.channel.guild.channels.filter(c => c.type === 0).map(c => c.id).includes(splitSuffix[0]) && splitSuffix.length === 1) {
+            getGuildDocument(msg.channel.guild.id).then((doc) => {
+              if (Object.keys(doc.feeds).filter(key => doc.feeds[key].channelID === ch.id).length === 0) {
+                updateGuildDocument(msg.channel.guild.id, { // to avoid globally requiring db handler functions
+                  'logchannel': ch.id
+                }).then((r) => {
+                  if (r === true) {
+                    msg.channel.createMessage(`<@${msg.author.id}>, I will now log **all** actions to **${ch.name}**! Use \`%help\` to see how you can set separate channels for certain events (joins, bans, etc)`).catch(() => {})
+                    ch.createMessage(`I was told to log here by **${msg.member.nick ? msg.member.nick : msg.author.username}#${msg.author.discriminator}**. I ignore anything that happens in this channel (message edit, delete).`).catch(() => {})
+                    loadToRedis(msg.channel.guild.id)
+                  } else {
+                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => {})
+                    log.error(`Error while setting channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
+                    log.error(r)
+                  }
+                })
+              } else {
+                let reason
+                if (doc.logchannel) {
+                  reason = `I'm already logging **all** actions to **${bot.getChannel(doc.logchannel).name}**! Go to <#${bot.getChannel(doc.logchannel).id}> and type \`%clearchannel\` to stop logging there`
+                }
+                if (!reason) {
+                  Object.keys(doc.feeds).forEach((key) => {
+                    if (doc.feeds[key].channelID === ch.id) {
+                      reason = `I'm already logging **${key}** actions to **${ch.name}**! Go to <#${ch.id}> and type \`%clearchannel\` to stop logging there`
+                    }
+                  })
+                }
+                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log to **${ch.name}**! Reason: ${reason}.`}})
+              }
+            })
+          } else if (validFeeds.includes(splitSuffix[0]) && splitSuffix.length === 1) {
+            getGuildDocument(msg.channel.guild.id).then((doc) => {
+              if (Object.keys(doc.feeds).filter(key => doc.feeds[key].channelID === msg.channel.id).length === 0 && !doc.logchannel) {
+                doc.feeds[splitSuffix[0]].channelID = msg.channel.id
+                updateGuildDocument(msg.channel.guild.id, { 'feeds': doc.feeds }).then((r) => {
+                  if (r === true) {
+                    msg.channel.createMessage(`<@${msg.author.id}>, I will now log **${splitSuffix[0]}** related actions to **${msg.channel.name}**!`).catch(() => {})
+                    loadToRedis(msg.channel.guild.id)
+                  } else {
+                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => {})
+                    log.error(`Error while setting channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
+                    log.error(r)
+                  }
+                })
+              } else {
+                let reason
+                if (doc.logchannel) {
+                  reason = `I'm already logging **all** actions to **${bot.getChannel(doc.logchannel).name}**! Go to <#${bot.getChannel(doc.logchannel).id}> and type \`%clearchannel\` to stop logging there`
+                }
+                if (!reason) {
+                  Object.keys(doc.feeds).forEach((key) => {
+                    if (doc.feeds[key].channelID === msg.channel.id) {
+                      reason = `I'm already logging **${key}** actions to **${msg.channel.name}**! Type \`%clearchannel\` to stop logging here`
+                    }
+                  })
+                }
+                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log here! Reason: ${reason}.`}})
+              }
+            })
           } else {
-            msg.channel.createMessage(`<@${msg.author.id}>, that channel doesn't exist. Either provide a valid channel or just use %setchannel in the channel you want me to log to.`).catch(() => {})
+            msg.channel.createMessage({ embed: { color: 16711680, description: `Incorrect usage. Read %help and try again.`}})
           }
         } else {
-          require('../handlers/update').updateGuildDocument(msg.channel.guild.id, { // to avoid globally requiring db handler functions
-            'logchannel': msg.channel.id
-          }).then((r) => {
-            if (r === true) {
-              msg.channel.createMessage(`<@${msg.author.id}>, I will now log actions to **${msg.channel.name}**!`).catch(() => {})
-              msg.channel.createMessage(`I was told to log here by **${msg.member.nick ? msg.member.nick : msg.author.username}#${msg.author.discriminator}**. I ignore anything that happens in this channel (message edit, delete).`).catch(() => {})
-              loadToRedis(msg.channel.guild.id)
-            } else {
-              msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => {})
-              log.error(`Error while setting channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
-              log.error(r)
+          getGuildDocument(msg.channel.guild.id).then((doc) => {
+            if (doc) {
+              if (msg.channel.id !== doc.logchannel && Object.keys(doc.feeds).map(key => doc.feeds[key].channelID).join('') === '') { // incredibly confusing logic, sorry world.
+                updateGuildDocument(msg.channel.guild.id, { 'logchannel': msg.channel.id }).then((response) => {
+                  if (response === true) {
+                    msg.channel.createMessage(`<@${msg.author.id}>, I will now log **all** actions to **${msg.channel.name}**. Make sure to checkout my full potential (feeds) using \`%help\``)
+                  } else {
+                    msg.channel.createMessage(`<@${msg.author.id}>, something went wrong.`)
+                    log.error(response)
+                  }
+                })
+              } else {
+                let reason
+                if (doc.logchannel) {
+                  reason = `I'm already logging **all** actions to **${bot.getChannel(doc.logchannel).name}**! Go to <#${bot.getChannel(doc.logchannel).id}> and type \`%clearchannel\` to stop logging there`
+                }
+                if (!reason) {
+                  Object.keys(doc.feeds).forEach((key) => {
+                    if (doc.feeds[key].channelID === msg.channel.id) {
+                      reason = `I'm already logging **${key}** actions to **${msg.channel.name}**! Type \`%clearchannel\` to stop logging here`
+                    }
+                  })
+                }
+                if (!reason) {
+                  reason = `I'm already logging to other channels! Use \`%clearchannel\` in them to stop logging. This restriction exists so that the bot doesn't get ratelimited`
+                }
+                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log here! Reason: ${reason}.`}})
+              }
             }
           })
         }
@@ -174,28 +270,82 @@ Commands.setchannel = {
     } else {
       msg.author.getDMChannel().then((DMChannel) => {
         DMChannel.createMessage(`I can't send messages to **${msg.channel.name}**!`)
-      }).catch(() => {}) // if you have dms disabled and the bot can't send messages to the log channel, sucks for you.
+      }).catch(() => {})
     }
   }
 }
 
 Commands.clearchannel = {
   name: 'clearchannel',
-  desc: 'Use this to clear the logchannel associated with the server.',
+  desc: 'Use this to clear the logchannel associated with the server. Usage: `%clearchannel` in the channel that you want to clear, or `%clearchannel all` to stop logging to any channel.',
   func: function (msg, suffix, bot) {
     let allowed = checkIfAllowed(msg)
     let loadToRedis = require('../handlers/read').loadToRedis
+    let updateGuildDocument = require('../handlers/update').updateGuildDocument
+    let getGuildDocument = require('../handlers/read').getGuildDocument
     if (allowed) {
-      require('../handlers/update').updateGuildDocument(msg.channel.guild.id, { // to avoid globally requiring db handler functions
-        'logchannel': ''
-      }).then((r) => {
-        if (r === true) {
-          msg.channel.createMessage(`<@${msg.author.id}>, Log channel wiped!`).catch(() => {})
-          loadToRedis(msg.channel.guild.id)
+      getGuildDocument(msg.channel.guild.id).then((doc) => {
+        if (suffix === 'all') {
+          updateGuildDocument(msg.channel.guild.id, {
+            'logchannel': ''
+          }).then((r) => {
+            if (r === true) {
+              loadToRedis(msg.channel.guild.id)
+            } else {
+              msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing all channels logged to, please try again.`).catch(() => {})
+              log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id})`)
+              log.error(r)
+            }
+          })
+          Object.keys(doc.feeds).forEach((feed) => {
+            if (doc.feeds[feed].channelID === msg.channel.id) {
+              doc.feeds[feed].channelID = ''
+              updateGuildDocument(msg.channel.guild.id, { 'feeds': doc.feeds }).then((r) => {
+                if (r === true) {
+                  loadToRedis(msg.channel.guild.id)
+                } else {
+                  msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => {})
+                  log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
+                  log.error(r)
+                }
+              })
+            }
+          })
+          msg.channel.createMessage(`<@${msg.author.id}>, I won't log to anything anymore!`)
+        } else if (doc.logchannel === msg.channel.id) {
+          updateGuildDocument(msg.channel.guild.id, { // to avoid globally requiring db handler functions
+            'logchannel': ''
+          }).then((r) => {
+            if (r === true) {
+              loadToRedis(msg.channel.guild.id)
+            } else {
+              msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => {})
+              log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
+              log.error(r)
+            }
+          })
+          msg.channel.createMessage(`<@${msg.author.id}>, I will stop logging **all** actions here!`)
         } else {
-          msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => {})
-          log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
-          log.error(r)
+          let feedsInChannel = Object.keys(doc.feeds).filter(key => doc.feeds[key].channelID === msg.channel.id ? key : '')
+          if (feedsInChannel.length !== 0) {
+            feedsInChannel.forEach((feed) => {
+              if (feed) {
+                doc.feeds[feed].channelID = ''
+                updateGuildDocument(msg.channel.guild.id, {
+                  'feeds': doc.feeds
+                }).then((r) => {
+                  if (r === true) {
+                    loadToRedis(msg.channel.guild.id)
+                  } else {
+                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while trying to stop logging here, please try again.`).catch(() => {})
+                    log.error(`Error while clearing logged to channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
+                    log.error(r)
+                  }
+                })
+              }
+            })
+            msg.channel.createMessage(`<@${msg.author.id}>, I won't log anything to **${msg.channel.name}** anymore!`)
+          }
         }
       })
     } else {
@@ -467,6 +617,12 @@ Commands.get = {
       let channel = guild ? undefined : bot.getChannel(suffix)
       let fields = []
       if (user) {
+        let owned = bot.guilds.filter(g => g.ownerID === user.id).map(g => `**${g.name}**: ${g.id}`)
+        if (owned.length !== 0) {
+          owned = owned.join('\n')
+        } else {
+          owned = 'None'
+        }
         fields.push({
           name: 'Name',
           value: `Known as: **${user.username}#${user.discriminator}**\nID: **${user.id}**\n<@${user.id}>`
@@ -476,6 +632,9 @@ Commands.get = {
         }, {
           name: 'Avatar',
           value: `**[Click Me](${user.avatar ? user.avatarURL : user.defaultAvatarURL})**`
+        }, {
+          name: 'Owned Servers',
+          value: `${owned}`
         })
         execute()
       } else if (channel) {
@@ -808,7 +967,7 @@ Commands.livestats = {
               if (res === true) {
                 msg.channel.createMessage(`<@${msg.author.id}>, if you want to stop the overview from being updated, just delete the message.`).then((mes) => {
                   setTimeout(() => {
-                    mes.delete()
+                    mes.delete().catch(() => {})
                   }, 10000)
                 })
                 loadToRedis(msg.channel.guild.id)
@@ -828,38 +987,49 @@ Commands.livestats = {
                 ]
                 msg.channel.guild.getBans().then((b, banserror) => {
                   msg.channel.guild.getAuditLogs(1, null, 22).then((log, auditerror) => {
-                    log = log.entries[0]
-                    let user = log.user
-                    bot.getRESTUser(log.targetID).then((affected) => {
-                      if (banserror || auditerror) {
-                        fields.push({
-                          'name': 'Ban Count',
-                          'value': '► Missing Permissions'
-                        })
-                      } else {
-                        fields.push({
-                          'name': 'Ban Count',
-                          'value': `► ${b.length === 0 ? '0' : `**${b.length}** | Latest Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`}`
-                        })
-                      }
-                      m.edit({ content: '**Live Stats**',
-                        embed: {
-                          'title': `${msg.channel.guild.name}`,
-                          'description': 'I will update with events that occur',
-                          'color': 7923697,
-                          'timestamp': new Date(m.timestamp),
-                          'footer': {
-                            'icon_url': bot.users.get(m.channel.guild.ownerID).avatarURL ? bot.users.get(m.channel.guild.ownerID).avatarURL : bot.users.get(m.channel.guild.ownerID).defaultAvatarURL,
-                            'text': `${bot.users.get(m.channel.guild.ownerID).username}#${bot.users.get(m.channel.guild.ownerID).discriminator}`
-                          },
-                          'thumbnail': {
-                            'url': m.channel.guild.iconURL ? m.channel.guild.iconURL : 'https://static1.squarespace.com/static/5937e362be659441f72e7c12/t/595120eadb29d60c5983e4a2/1498489067243/Sorry-image-not-available.png'
-                          },
-                          'fields': fields
-                        }})
-                    })
+                    if (log.entries.length !== 0) {
+                      log = log.entries[0]
+                      let user = log.user
+                      bot.getRESTUser(log.targetID).then((affected) => {
+                        if (banserror || auditerror) {
+                          fields.push({
+                            'name': 'Ban Count',
+                            'value': '► Missing Permissions'
+                          })
+                        } else {
+                          fields.push({
+                            'name': 'Ban Count',
+                            'value': `► **Count**: ${b.length} | Last Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`
+                          })
+                        }
+                        editMessage()
+                      })
+                    } else {
+                      fields.push({
+                        'name': 'Ban Count',
+                        'value': 'None yet!'
+                      })
+                      editMessage()
+                    }
                   })
                 })
+                function editMessage () {
+                  m.edit({ content: '**Live Stats**',
+                    embed: {
+                      'title': `${msg.channel.guild.name}`,
+                      'description': 'I will update with events that occur',
+                      'color': 7923697,
+                      'timestamp': new Date(m.timestamp),
+                      'footer': {
+                        'icon_url': bot.users.get(m.channel.guild.ownerID).avatarURL ? bot.users.get(m.channel.guild.ownerID).avatarURL : bot.users.get(m.channel.guild.ownerID).defaultAvatarURL,
+                        'text': `${bot.users.get(m.channel.guild.ownerID).username}#${bot.users.get(m.channel.guild.ownerID).discriminator}`
+                      },
+                      'thumbnail': {
+                        'url': m.channel.guild.iconURL ? m.channel.guild.iconURL : 'https://static1.squarespace.com/static/5937e362be659441f72e7c12/t/595120eadb29d60c5983e4a2/1498489067243/Sorry-image-not-available.png'
+                      },
+                      'fields': fields
+                    }})
+                }
               } else {
                 m.edit('An error occured while setting the overview message, please try again later.')
                 log.error(`Error while setting overview for guild ${msg.channel.guild.name} (${msg.channel.guild.id}):`, res)
@@ -922,18 +1092,33 @@ Commands.help = {
   name: 'help',
   desc: 'Provides help with the bot\'s functionality',
   func: function (msg, suffix, bot) {
-    let cmdArray = [`__Help for Logger__\n\n`]
+    let cmdList = {
+      0: [`__Help for Logger__\n\n`]
+    }
+    let counter = 0
     Object.keys(Commands).forEach((cmd) => {
       if (!Commands[cmd].hasOwnProperty('hidden')) {
-        cmdArray.push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
+        if (cmdList[counter].join('\n').length > 1750) {
+          counter++
+          cmdList[counter] = []
+        } else {
+          cmdList[counter].push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
+        }
       } else if (checkCanUse(msg.author.id, 'eval')) {
-        cmdArray.push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
+        if (cmdList[counter].join('\n').length > 1750) {
+          counter++
+          cmdList[counter] = []
+        } else {
+          cmdList[counter].push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
+        }
       }
     })
-    cmdArray.push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/dashboard/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
+    cmdList[counter].push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/dashboard/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
     msg.addReaction('📜').catch(() => {})
     msg.author.getDMChannel().then((DMChannel) => {
-      DMChannel.createMessage(cmdArray.join('')).catch(() => {})
+      for (let set in cmdList) {
+        DMChannel.createMessage(cmdList[set].join('')).catch(() => {})
+      }
     })
   }
 }

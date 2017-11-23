@@ -22,7 +22,24 @@ function createGuild (guild) {
     'logchannel': '',
     'ownerID': guild.ownerID,
     'overviewID': '',
-    'logBots': false
+    'logBots': false,
+    'feeds': {
+      'messages': {
+        'channelID': ''
+      },
+      'mod': {
+        'channelID': ''
+      },
+      'voice': {
+        'channelID': ''
+      },
+      'server': {
+        'channelID': ''
+      },
+      'joinlog': {
+        'channelID': ''
+      }
+    }
   }).run().then((r) => {
     if (r.inserted) {
       let owner = bot.users.find(u => u.id === guild.ownerID)
