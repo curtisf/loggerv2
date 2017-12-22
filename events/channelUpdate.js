@@ -31,11 +31,7 @@ module.exports = {
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
-            simple: `Channel overwrite deleted (${now.name})`,
-            footer: {
-              text: 'I cannot view audit logs!',
-              icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
-            }
+            simple: `Channel overwrite deleted (${now.name})`
           })
         })
       } else if (now.permissionOverwrites.size < before.permissionOverwrites.size) {
@@ -59,11 +55,7 @@ module.exports = {
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
-            simple: `Channel overwrite deleted (${now.name})`,
-            footer: {
-              text: 'I cannot view audit logs!',
-              icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
-            }
+            simple: `Channel overwrite deleted (${now.name})`
           })
         })
       } else if (now.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString() !== before.permissionOverwrites.map(o => `${o.allow}|${o.deny}`).toString()) {
@@ -74,7 +66,7 @@ module.exports = {
             type: 'Channel Overwrite Updated',
             changed: `► Channel: **${now.name}** (${now.id})\n► Type: **${log.entries[0].role ? 'Role' : 'Member'}**\n► Against: **${log.entries[0].role ? `${log.entries[0].role.name}` : `${log.entries[0].member.username}#${log.entries[0].member.discriminator}`}**`,
             color: 8351671,
-            simple: `Channel overwrite updated by **${log.entries[0].user.username}#${log.entries[0].user.discriminator}** in ${now.name})`,
+            simple: `Channel overwrite updated by **${log.entries[0].user.username}#${log.entries[0].user.discriminator}** in ${now.name}`,
             footer: {
               text: `Updated by ${log.entries[0].user.username}#${log.entries[0].user.discriminator}`,
               icon_url: `${log.entries[0].user.avatar ? `https://cdn.discordapp.com/avatars/${log.entries[0].user.id}/${log.entries[0].user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${log.entries[0].user.discriminator % 5}.png`}`
@@ -87,11 +79,7 @@ module.exports = {
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
-            simple: `Channel overwrite deleted (${now.name})`,
-            footer: {
-              text: 'I cannot view audit logs!',
-              icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
-            }
+            simple: `Channel overwrite deleted (${now.name})`
           })
         })
       } else {
@@ -137,11 +125,7 @@ module.exports = {
             type: 'Channel Overwrite Deleted',
             changed: `► Channel: **${now.name}**\n► ID: **${now.id}**`,
             color: 8351671,
-            simple: `Channel overwrite deleted (${now.name})`,
-            footer: {
-              text: 'I cannot view audit logs!',
-              icon_url: 'http://www.clker.com/cliparts/C/8/4/G/W/o/transparent-red-circle-hi.png'
-            }
+            simple: `Channel overwrite deleted (${now.name})`
           })
         })
       }

@@ -70,6 +70,8 @@ function checkIfAllowed (msg) {
     return true
   } else if (userPerms.administrator || userPerms.manageGuild) {
     return true
+  } else if (msg.member.roles.includes(msg.channel.guild.roles.find(r => r.name.toLowerCase() === 'quartermaster').id)) {
+    return true
   } else {
     return false
   }

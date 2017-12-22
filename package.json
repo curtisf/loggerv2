@@ -29,7 +29,7 @@
     "express": "^4.15.4",
     "express-session": "^1.15.5",
     "fs": "0.0.1-security",
-    "helmet": "^3.8.1",
+    "helmet": "^3.9.0",
     "https": "^1.0.0",
     "jade": "^1.11.0",
     "node-dogstatsd": "github:joybro/node-dogstatsd",

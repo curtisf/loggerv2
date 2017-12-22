@@ -265,7 +265,7 @@ Commands.setchannel = {
           })
         }
       } else {
-        msg.channel.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server** or **Administrator**`)
+        msg.channel.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server**, **Administrator**, or the \`quartermaster\` role.`)
       }
     } else {
       msg.author.getDMChannel().then((DMChannel) => {
@@ -535,42 +535,39 @@ Commands.lastnames = {
 
 Commands.archive = {
   name: 'archive',
-  desc: 'Gets the last number of messages provided from the channel it is used in. (%archive [1-600])',
+  desc: 'Gets the last number of messages provided from the channel it is used in. (%archive [1-1000]) or search the last x messages from a user (%archive 1000 @Piero), only gathers messages in channel used.',
   func: function (msg, suffix, bot) {
     let request = require('superagent')
     let splitSuffix = suffix.split(' ')
     if (!msg.channel.guild.members.get(msg.author.id).permission.json.readMessageHistory || !msg.channel.guild.members.get(msg.author.id).permission.json.manageMessages) {
-      msg.channel.createMessage(`<@${msg.author.id}>, You lack **Read Message History** or **Manage Messages** permission!`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, You need **Read Message History**, **Manage Messages**, or the \`quartermaster\` role to use archive!`).catch(() => {})
     } else if (!msg.channel.guild.members.get(bot.user.id).permission.json.readMessageHistory) {
       msg.channel.createMessage(`<@${msg.author.id}>, I need the **Read Message History** permission to archive messages!`).catch(() => {})
     } else if (!suffix) {
       msg.channel.createMessage(`<@${msg.author.id}>, You need to provide a number of messages to archive! (1-600)`).catch(() => {})
     } else if (isNaN(splitSuffix[0])) {
       msg.channel.createMessage(`<@${msg.author.id}>, You need to provide a number of messages to archive! (1-600)`).catch(() => {})
-    } else if (splitSuffix[0] < 1 || splitSuffix[0] > 600) {
+    } else if (splitSuffix[0] < 1 || splitSuffix[0] > 1000) {
       msg.channel.createMessage(`<@${msg.author.id}>, Invalid number of messages provided, you can use any from 1-600`).catch(() => {})
-    } else {
-      safeLoop(parseInt(splitSuffix[0]))
+    } else if (checkIfAllowed(msg)) {
+      if (msg.mentions.length === 1) {
+        fetch(parseInt(splitSuffix[0]), msg.mentions[0].id)
+      } else if (msg.mentions.length > 1) {
+        msg.channel.createMessage(`<@${msg.author.id}>, you may only provide one mention!`)
+      } else {
+        fetch(parseInt(splitSuffix[0]))
+      }
     }
     let messageArray = []
 
-    function safeLoop (amount) {
-      if (amount !== 0) {
-        if (amount > 100) {
-          msg.channel.getMessages(100).then((m) => {
-            messageArray = messageArray.concat(m)
-            amount = amount - 100
-            safeLoop(amount)
-          })
+    function fetch (amount, authorID) {
+      msg.channel.getMessages(amount).then((messageArray) => {
+        let messagesString
+        if (authorID) {
+          messagesString = messageArray.filter(m => m.author.id === authorID).reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`).join('\r\n')
         } else {
-          msg.channel.getMessages(amount).then((m) => {
-            messageArray = messageArray.concat(m)
-            amount = amount - amount
-            safeLoop(amount)
-          })
+          messagesString = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`).join('\r\n')
         }
-      } else {
-        let messagesString = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`).join('\r\n')
         request
       .post(`https://paste.lemonmc.com/api/json/create`)
       .send({
@@ -588,7 +585,7 @@ Commands.archive = {
           msg.channel.createMessage(`<@${msg.author.id}>, An error occurred while uploading your archived messages, please contact the bot author!`).catch(() => {})
         }
       })
-      }
+      })
     }
   }
 }
@@ -904,8 +901,8 @@ Commands.auditlogs = {
   name: 'auditlogs',
   desc: 'Get the last x audit logs (up to 25)',
   func: function (msg, suffix, bot) {
-    if (!msg.member.permission.json['viewAuditLogs']) {
-      msg.channel.createMessage(`<@${msg.author.id}>, you can't view audit logs!`).catch(() => {})
+    if (!msg.member.permission.json['viewAuditLogs'] && !checkIfAllowed(msg)) {
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't view audit logs or don't have the \`quartermaster\` role`).catch(() => {})
     } else if (!msg.channel.guild.members.get(bot.user.id).permission.json['viewAuditLogs']) {
       msg.channel.createMessage(`<@${msg.author.id}>, I can't view audit logs!`).catch(() => {})
     } else if (isNaN(suffix)) {
@@ -960,7 +957,7 @@ Commands.livestats = {
     let updateGuildDocument = require('../handlers/update').updateGuildDocument
     let userPerms = msg.member.permission.json
     if (msg.channel.permissionsOf(bot.user.id).json.sendMessages) {
-      if (msg.author.id === msg.channel.guild.ownerID || userPerms.administrator || userPerms.manageGuild) {
+      if (checkIfAllowed(msg)) {
         if (botPerms.sendMessages) {
           msg.channel.createMessage('Setting overview message.').then((m) => {
             updateGuildDocument(msg.channel.guild.id, {'overviewID': `${m.channel.id}|${m.id}`}).then((res) => {
@@ -1042,7 +1039,7 @@ Commands.livestats = {
           })
         }
       } else {
-        msg.channel.createMessage('You lack the permissions needed to use **livestats**! Needed: **Administrator**, **Manage Server**, or server ownership')
+        msg.channel.createMessage('You lack the permissions needed to use **livestats**! Needed: **Administrator**, **Manage Server**, server ownership, or the `quartermaster` role.')
       }
     } else {
       msg.author.getDMChannel().then((c) => {
@@ -1113,7 +1110,7 @@ Commands.help = {
         }
       }
     })
-    cmdList[counter].push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/dashboard/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3`)
+    cmdList[counter].push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/dashboard/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3\nDo you like Logger? Check out my patreon page! https://www.patreon.com/logger`)
     msg.addReaction('📜').catch(() => {})
     msg.author.getDMChannel().then((DMChannel) => {
       for (let set in cmdList) {

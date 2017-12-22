@@ -5,6 +5,7 @@ import redis from 'redis'
 import sleep from 'sleep'
 import * as request from 'superagent'
 import spawn from 'cross-spawn'
+import { getUserDocument, loadToRedis } from './handlers/read'
 
 process.title = 'Logger v2.5'
 
@@ -268,135 +269,93 @@ let processes = []
 
 if (Config.dev.usedash === true) {
   processes['dashboard'] = {
-    process: spawn('node', ['./dashboard.js'], {
+    process: spawn('node', [Config.dev.filepath], {
+	  cwd: Config.dev.dirpath,
       detached: false,
       stdio: ['inherit', 'inherit', 'inherit', 'ipc']
     })
     .on('message', message => {
-      if (!message.type) {
-        log.warn('Invalid request from child process, denying.')
+      message = JSON.parse(message)
+      if (!message.op) {
+        log.warn('Invalid request from child process, denying.', message)
       } else {
-        switch (message.type) {
-          case 'getUser':
+        switch (message.op) {
+          case 'GETUSER':
             processes['dashboard'].process.send({
-              type: 'getUserReply',
-              content: JSON.stringify(bot.users.get(message.id), null, '   '),
+              op: 'GETUSER_RESPONSE',
+              c: JSON.stringify(bot.users.get(message.id), null, '   '),
               requestedID: message.id
             })
             break
-          case 'getChannels':
+          case 'GUILD_FETCH':
             processes['dashboard'].process.send({
-              type: 'getChannelsReply',
-              content: JSON.stringify(bot.guilds.get(message.id).channels.filter(c => c.type === 0).map(c => {
-                return {
-                  name: c.name,
-                  id: c.id
-                }
-              })),
+              op: 'GUILD_FETCH_RESPONSE',
+              c: bot.guilds.get(message.id),
               requestedID: message.id
             })
             break
-          case 'getBotPerms':
-            let botPerms
-            if (message.channelID) {
-              let channel = bot.getChannel(message.channelID)
-              if (!channel) {
-                processes['dashboard'].process.send({
-                  type: 'getBotPermsReply',
-                  content: null,
-                  requestedID: message.userID
-                })
-                return
-              } else {
-                botPerms = channel.permissionsOf(bot.user.id).json
-              }
-            } else {
-              let guild = bot.guilds.get(message.guildID)
-              if (!guild) {
-                processes['dashboard'].process.send({
-                  type: 'getBotPermsReply',
-                  content: null,
-                  requestedID: message.userID
-                })
-                return
-              }
-              botPerms = guild.members.get(bot.user.id).permission.json
-            }
+          case 'GET_USER_PERMS_GUILD':
             processes['dashboard'].process.send({
-              type: 'getBotPermsReply',
-              content: JSON.stringify(botPerms, null, '  '),
-              requestedID: message.guildID || message.channelID
-            })
-            break
-          case 'getUserPerms':
-            let user = bot.users.get(message.userID)
-            let userPerms
-            let isOwner
-            if (message.channelID) {
-              let channel = bot.getChannel(message.channelID)
-              if (!channel) {
-                processes['dashboard'].process.send({
-                  type: 'getUserPermsReply',
-                  content: null,
-                  requestedID: message.userID
-                })
-                return
-              } else {
-                userPerms = channel.guild.members.get(message.userID).permission.json
-                isOwner = channel.guild.ownerID === user.id
-              }
-            } else {
-              let guild = bot.guilds.get(message.guildID)
-              if (!guild) {
-                processes['dashboard'].process.send({
-                  type: 'getUserPermsReply',
-                  content: null,
-                  requestedID: message.userID
-                })
-                return
-              } else {
-                userPerms = guild.members.get(message.userID).permission.json
-                isOwner = guild.ownerID === user.id
-              }
-            }
-            if (isOwner) {
-              Object.keys(userPerms).forEach((key) => {
-                Object.keys(userPerms[key]).forEach((prop) => {
-                  userPerms[key][prop] = true
-                })
-              })
-            }
-            processes['dashboard'].process.send({
-              type: 'getUserPermsReply',
-              content: JSON.stringify(userPerms, null, '  '),
-              requestedID: message.userID
-            })
-            break
-          case 'getChannelInfo':
-            let channel = bot.getChannel(message.id)
-            processes['dashboard'].process.send({
-              type: 'getChannelInfoReply',
-              content: JSON.stringify({name: channel.name, id: channel.id}, null, '  '),
+              op: 'GET_USER_PERMS_GUILD_RESPONSE',
+              c: bot.guilds.get(message.id).members.get(message.userID).permission.json,
               requestedID: message.id
             })
             break
-          case 'getUserPermsGuild':
-            if (bot.guilds.get(message.guildID)) {
-              let guild = bot.guilds.get(message.guildID)
-              let member = guild.members.get(message.userID)
+          case 'GET_EDITABLE_GUILDS':
+            let editableServers = []
+            message.content.forEach((guild) => {
+              if (bot.guilds.get(guild.id) && (bot.guilds.get(guild.id).members.get(message.id).permission.json.manageServer || bot.guilds.get(guild.id).members.get(message.id).permission.json.administrator)) {
+                editableServers.push({
+                  name: guild.name,
+                  id: guild.id,
+                  owner: guild.owner ? 'You' : bot.users.get(bot.guilds.get(guild.id).ownerID).username,
+                  iconURL: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : 'http://100.7.41.125:8000/images/unavailable.png'
+                })
+              }
+            })
+            processes['dashboard'].process.send({
+              op: 'GET_EDITABLE_GUILDS_RESPONSE',
+              c: editableServers,
+              requestedID: message.id
+            })
+            break
+          case 'GET_LASTNAMES':
+            getUserDocument(message.id).then((doc) => {
               processes['dashboard'].process.send({
-                type: 'getUserPermsGuildReply',
-                content: JSON.stringify(member.permission.json, null, '   '),
-                requestedID: message.userID
+                op: 'GET_LASTNAMES_RESPONSE',
+                c: doc.names,
+                requestedID: message.id
               })
-            } else {
-              processes['dashboard'].process.send({
-                type: 'getUserPermsGuildReply',
-                content: JSON.stringify(null, null, '   '),
-                requestedID: message.userID
-              })
-            }
+            })
             break
+          case 'GET_ACCESSABLE_CHANNELS':
+            let guild = bot.guilds.get(message.content)
+            let accessableChannels = guild.channels.filter(c => c.type === 0).filter((c) => {
+              if (c.permissionsOf(message.id).json['sendMessages']) {
+                return true
+              } else {
+                return false
+              }
+            })
+            processes['dashboard'].process.send({
+              op: 'GET_ACCESSABLE_CHANNELS_RESPONSE',
+              c: accessableChannels,
+              requestedID: message.id
+            })
+            break
+          case 'CHANNEL_FETCH':
+            processes['dashboard'].process.send({
+              op: 'CHANNEL_FETCH_RESPONSE',
+              c: bot.getChannel(message.id),
+              requestedID: message.id
+            })
+            break
+          case 'RECACHE_REDIS':
+            loadToRedis(message.id)
+            processes['dashboard'].process.send({
+              op: 'RECACHE_REDIS_RESPONSE',
+              requestedID: message.id
+            })
         }
       }
     })
