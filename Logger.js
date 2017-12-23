@@ -304,7 +304,7 @@ if (Config.dev.usedash === true) {
           case 'GET_EDITABLE_GUILDS':
             let editableServers = []
             message.content.forEach((guild) => {
-              if (bot.guilds.get(guild.id) && (bot.guilds.get(guild.id).members.get(message.id).permission.json.manageServer || bot.guilds.get(guild.id).members.get(message.id).permission.json.administrator)) {
+              if (bot.guilds.get(guild.id) && (bot.guilds.get(guild.id).members.get(message.id).permission.json.manageGuild || bot.guilds.get(guild.id).members.get(message.id).permission.json.administrator)) {
                 editableServers.push({
                   name: guild.name,
                   id: guild.id,
@@ -323,7 +323,7 @@ if (Config.dev.usedash === true) {
             getUserDocument(message.id).then((doc) => {
               processes['dashboard'].process.send({
                 op: 'GET_LASTNAMES_RESPONSE',
-                c: doc.names,
+                c: doc.names ? doc.names : ['None'],
                 requestedID: message.id
               })
             })

@@ -57,15 +57,15 @@ Commands.info = {
       },
       'fields': [{
         'name': 'General Information',
-        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **%setchannel** in the wanted channel.`
+        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **%setchannel** in the wanted channel or by using %help/the dashboard.`
       },
       {
         'name': 'Technical Details',
         'value': 'Logger is written in JavaScript utilizing the Node.js runtime. It uses the **eris** library to interact with the Discord API. For data storage, RethinkDB and Redis are used.'
       },
       {
-        'name': 'The Authors',
-        'value': 'Logger is developed and maintained by [Piero#2048](https://github.com/caf203) and [LWTech#7575](https://github.com/LWTechGaming). You can contact my maintainers via my [home server](https://discord.gg/ed7Gaa3).'
+        'name': 'The Author',
+        'value': 'Logger is developed and maintained by [Piero#2048](https://github.com/caf203). You can contact him via my [home server](https://discord.gg/ed7Gaa3).'
       }]
     }
     msg.channel.createMessage({embed: info}).catch(() => {})

@@ -13,7 +13,7 @@ module.exports = {
     if (member) {
       let obj = {
         guildID: guild.id,
-        type: 'Member Joined',
+        type: `Member Joined${member.id === '212445217763229699' ? ' (Logger Staff)' : ''}`,
         changed: `► Name: **[\`${member.username}#${member.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${member.avatar}.jpg)** (${member.id})\n► Account Age: **${Math.floor((new Date() - member.user.createdAt) / 86400000)}** days\n► Joined At: **${new Date(member.joinedAt).toString().substr(0, 21)}**${member.bot ? '\n► Joined via OAuth invite.' : ''}`,
         color: 65355,
         against: member,
@@ -32,7 +32,7 @@ module.exports = {
                   Redis.existsAsync(`${guild.id}:lastJoin`).then((res) => {
                     if (res) {
                       Redis.getAsync(`${guild.id}:lastJoin`).then((lastTime) => {
-                        if (lastJoin - lastTime < 8000) {
+                        if (lastJoin - lastTime < 3000) {
                           obj.changed += `\n► Possible Raid Detected!`
                           obj.color = 16711680
                           sendToLog(this.name, bot, obj)
@@ -65,7 +65,7 @@ module.exports = {
                   Redis.existsAsync(`${guild.id}:lastJoin`).then((res) => {
                     if (res) {
                       Redis.getAsync(`${guild.id}:lastJoin`).then((lastTime) => {
-                        if (lastJoin - lastTime < 8000) {
+                        if (lastJoin - lastTime < 3000) {
                           obj.changed += `\n► Possible Raid Detected!`
                           obj.color = 16711680
                           sendToLog(this.name, bot, obj)
@@ -98,7 +98,7 @@ module.exports = {
         Redis.existsAsync(`${guild.id}:lastJoin`).then((res) => {
           if (res) {
             Redis.getAsync(`${guild.id}:lastJoin`).then((lastTime) => {
-              if (lastJoin - lastTime < 8000) {
+              if (lastJoin - lastTime < 3000) {
                 obj.changed += `\n► Possible Raid Detected!`
                 obj.color = 16711680
                 sendToLog(this.name, bot, obj)
