@@ -1110,7 +1110,7 @@ Commands.help = {
         }
       }
     })
-    cmdList[counter].push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/dashboard/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3\nDo you like Logger? Check out my patreon page! https://www.patreon.com/logger`)
+    cmdList[counter].push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3\nDo you like Logger? Check out my patreon page! https://www.patreon.com/logger`)
     msg.addReaction('📜').catch(() => {})
     msg.author.getDMChannel().then((DMChannel) => {
       for (let set in cmdList) {
