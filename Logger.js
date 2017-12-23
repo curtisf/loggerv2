@@ -309,7 +309,7 @@ if (Config.dev.usedash === true) {
                   name: guild.name,
                   id: guild.id,
                   owner: guild.owner ? 'You' : bot.users.get(bot.guilds.get(guild.id).ownerID).username,
-                  iconURL: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : 'http://100.7.41.125:8000/images/unavailable.png'
+                  iconURL: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : 'https://whatezlife.com/images/unavailable.png'
                 })
               }
             })
