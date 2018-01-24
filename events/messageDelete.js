@@ -18,30 +18,32 @@ module.exports = {
     if (!msg.timestamp) {
       Redis.getAsync(`${msg.id}:content`).then((content) => {
         Promise.all([Redis.getAsync(`${msg.id}:from`), Redis.getAsync(`${msg.id}:timestamp`), Redis.getAsync(`${msg.id}:image`)]).then((dataArr) => {
-          let split = dataArr[0].split('|')
-          let authorId = split[0]
-          let authorUsername = split[1]
-          let channelId = split[2]
-          let guildId = split[3]
-          let authorDiscriminator = split[4]
-          let authorAvatar = split[5]
-          let channel = bot.getChannel(channelId)
-          sendToLog(this.name, bot, {
-            guildID: guildId,
-            channelID: channelId,
-            type: 'Message Deleted',
+          if (dataArr.filter(g => g).length) {
+            let split = dataArr[0].split('|')
+            let authorId = split[0]
+            let authorUsername = split[1]
+            let channelId = split[2]
+            let guildId = split[3]
+            let authorDiscriminator = split[4]
+            let authorAvatar = split[5]
+            let channel = bot.getChannel(channelId)
+            sendToLog(this.name, bot, {
+              guildID: guildId,
+              channelID: channelId,
+              type: 'Message Deleted',
               changed: `► Content: \`${content ? content.replace(/\"/g, '"').replace(/`/g, '') : 'None.'}\`\n► Channel: **${channel ? channel.name : 'Unknown'}**\n► Message ID: ${msg.id}`, // eslint-disable-line
-            color: 8351671,
-            timestamp: dataArr[1],
-            against: {
-              id: authorId,
-              username: authorUsername,
-              discriminator: authorDiscriminator,
-              avatar: authorAvatar
-            },
-            simple: `A message created by **${authorUsername}#${authorDiscriminator}** was deleted in ${channel ? channel.name : 'an unknown channel'}.`,
-            base64: dataArr[2]
-          })
+              color: 8351671,
+              timestamp: dataArr[1],
+              against: {
+                id: authorId,
+                username: authorUsername,
+                discriminator: authorDiscriminator,
+                avatar: authorAvatar
+              },
+              simple: `A message created by **${authorUsername}#${authorDiscriminator}** was deleted in ${channel ? channel.name : 'an unknown channel'}.`,
+              base64: dataArr[2]
+            })
+          }
         }).catch(console.error)
       })
     } else {
@@ -77,7 +79,6 @@ module.exports = {
           Redis.existsAsync(msg.id).then((exist) => {
             if (exist) {
               Redis.getAsync(`${msg.id}:image`).then((base64) => {
-                console.log('had base 64, sent to log')
                 sendToLog(module.exports.name, bot, {
                   guildID: msg.channel.guild.id,
                   channelID: msg.channel.id,
