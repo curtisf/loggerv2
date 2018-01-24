@@ -29,11 +29,6 @@ const Redis = redis.createClient()
 const middleware = require('./system/middleware').handle
 const Raven = require('raven')
 Raven.config(Config.raven.url).install()
-const StatsD = require('node-dogstatsd').StatsD
-let Dog
-if (Config.datadog.use) {
-  Dog = new StatsD('localhost', 8125)
-}
 
 let restarts = 0
 
@@ -303,21 +298,29 @@ if (Config.dev.usedash === true) {
             break
           case 'GET_EDITABLE_GUILDS':
             let editableServers = []
-            message.content.forEach((guild) => {
-              if (bot.guilds.get(guild.id) && (bot.guilds.get(guild.id).members.get(message.id).permission.json.manageGuild || bot.guilds.get(guild.id).members.get(message.id).permission.json.administrator)) {
-                editableServers.push({
-                  name: guild.name,
-                  id: guild.id,
-                  owner: guild.owner ? 'You' : bot.users.get(bot.guilds.get(guild.id).ownerID).username,
-                  iconURL: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : 'https://whatezlife.com/images/unavailable.png'
-                })
-              }
-            })
-            processes['dashboard'].process.send({
-              op: 'GET_EDITABLE_GUILDS_RESPONSE',
-              c: editableServers,
-              requestedID: message.id
-            })
+            if (message.content) {
+              message.content.forEach((guild) => {
+                if (bot.guilds.get(guild.id) && (bot.guilds.get(guild.id).members.get(message.id).permission.json.manageGuild || bot.guilds.get(guild.id).members.get(message.id).permission.json.administrator)) {
+                  editableServers.push({
+                    name: guild.name,
+                    id: guild.id,
+                    owner: guild.owner ? 'You' : bot.users.get(bot.guilds.get(guild.id).ownerID).username,
+                    iconURL: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : 'https://whatezlife.com/images/unavailable.png'
+                  })
+                }
+              })
+              processes['dashboard'].process.send({
+                op: 'GET_EDITABLE_GUILDS_RESPONSE',
+                c: editableServers,
+                requestedID: message.id
+              })
+            } else {
+              processes['dashboard'].process.send({
+                op: 'GET_EDITABLE_GUILDS_RESPONSE',
+                c: [],
+                requestedID: message.id
+              })
+            }
             break
           case 'GET_LASTNAMES':
             getUserDocument(message.id).then((doc) => {
@@ -369,4 +372,4 @@ process.on('exit', function () {
   })
 })
 
-export { bot, Redis, Dog }
+export { bot, Redis }

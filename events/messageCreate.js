@@ -1,7 +1,12 @@
-import { Dog } from '../Logger'
+import { Redis } from '../Logger'
 import { log } from '../system/log'
+import { influx } from '../system/middleware'
+const os = require('os')
+let superagent = require('superagent')
 const Config = require('../botconfig.json')
 let Commands = require('../system/commands').Commands
+let commandObj = {}
+Object.keys(Commands).forEach((command) => commandObj[command] = 0)
 
 module.exports = {
   toggleable: false,
@@ -17,6 +22,16 @@ module.exports = {
         }
       }
     } else {
+      Redis.set(`${msg.id}:content`, msg.content)
+      Redis.set(`${msg.id}:from`, `${msg.author.id}|${msg.author.username}|${msg.channel.id}|${msg.channel.guild.id}|${msg.author.discriminator}|${msg.author.avatar}`)
+      Redis.set(`${msg.id}:timestamp`, msg.timestamp)
+      if (msg.attachments.length !== 0 && (msg.attachments[0].filename.endsWith('png') || msg.attachments[0].filename.endsWith('jpg'))) {
+        superagent.get(msg.attachments[0].url).end((err, res) => {
+          if (err) log.error(err)
+          console.log('stored base64 in redis')
+          Redis.set(`${msg.id}:image`, new Buffer(res.body).toString('base64'))
+        })
+      }
         // Command detection
       let prefix = Config.core.prefix
       if (msg.content.startsWith(prefix)) {
@@ -41,15 +56,13 @@ module.exports = {
               gd.defaultChannel = []
               gd.shard = []
               gd.toString = 'no.'
-              if (Config.datadog.use) {
-                Dog.incrementBy('bot.totalCommands', 1)
-              }
               log.info(`Command "${cmd}${suffix ? ` ${suffix}` : ''}" from user ${msg.author.username}#${msg.author.discriminator} (${msg.author.id})\n`, {
                 guild: gd,
                 botID: bot.user.id,
                 cmd: cmd,
                 shard: msg.channel.guild.shard.id
               })
+              commandObj[cmd]++
               Commands[cmd].func(msg, suffix, bot)
             }
           } catch (err) {
@@ -60,4 +73,19 @@ module.exports = {
       }
     }
   }
+}
+
+if (Config.influx.use) {
+  setInterval(() => {
+    let allToSend = []
+    Object.keys(commandObj).forEach((event) => {
+      allToSend.push({
+        measurement: event,
+        tags: { host: os.hostname() },
+        fields: { count: commandObj[event] }
+      })
+      commandObj[event] = 0
+    })
+    influx.writePoints(allToSend)
+  }, 60000)
 }

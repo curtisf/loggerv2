@@ -5,6 +5,7 @@ import util from 'util'
 import path from 'path'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
+const SA = require('superagent')
 Raven.config(Config.raven.url).install()
 
 let eventsObj = require('require-all')(path.join(__dirname, '/../events'))
@@ -34,7 +35,7 @@ Commands.ping = {
   desc: 'Return pseudo-ping for the bot.',
   func: function (msg, suffix, bot) {
     msg.channel.createMessage('Pong!').then((m) => {
-      m.edit(`Pong! Pseudo-ping: **${Math.floor(new Date(m.timestamp) - new Date(msg.timestamp))}** ms. Shard ping: **${bot.shards.get(0).latency}** ms.`)
+      m.edit(`Pong! Pseudo-ping: **${Math.floor(new Date(m.timestamp) - new Date(msg.timestamp))}** ms. Websocket latency: **${bot.shards.get(0).latency}** ms.`)
     }).catch(() => {})
   }
 }
@@ -287,7 +288,24 @@ Commands.clearchannel = {
       getGuildDocument(msg.channel.guild.id).then((doc) => {
         if (suffix === 'all') {
           updateGuildDocument(msg.channel.guild.id, {
-            'logchannel': ''
+            'logchannel': '',
+            'feeds': {
+              'joinlog': {
+                'channelID': ''
+              },
+              'messages': {
+                'channelID': ''
+              },
+              'mod': {
+                'channelID': ''
+              },
+              'server': {
+                'channelID': ''
+              },
+              'voice': {
+                'channelID': ''
+              }
+            }
           }).then((r) => {
             if (r === true) {
               loadToRedis(msg.channel.guild.id)
@@ -704,6 +722,14 @@ Commands.get = {
             name: 'Ignored Channels',
             value: `${doc.ignoredChannels.length !== 0 ? `\`\`\`${doc.ignoredChannels.map(c => bot.getChannel(c).name).join(', ')}\`\`\`` : 'None'}`
           })
+          Object.keys(doc.feeds).forEach((feed) => {
+            if (doc.feeds[feed].channelID) {
+              fields.push({
+                name: `${feed} channel`,
+                value: `${bot.getChannel(doc.feeds[feed].channelID).name} (${bot.getChannel(doc.feeds[feed].channelID).id})`
+              })
+            }
+          })
           execute()
         })
       } else {
@@ -906,15 +932,18 @@ Commands.auditlogs = {
     } else if (!msg.channel.guild.members.get(bot.user.id).permission.json['viewAuditLogs']) {
       msg.channel.createMessage(`<@${msg.author.id}>, I can't view audit logs!`).catch(() => {})
     } else if (isNaN(suffix)) {
-      msg.channel.createMessage(`<@${msg.author.id}>, please provide a number between 1 and 20 to fetch.`).catch(() => {})
-    } else if (suffix > 25) {
-      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch more than 20 audit logs at once.`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, please provide a number between 1 and 75 to fetch.`).catch(() => {})
+    } else if (suffix > 75) {
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch more than 75 audit logs at once.`).catch(() => {})
     } else if (suffix < 1) {
-      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch less than 1 audit logs.`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch less than 1 audit log.`).catch(() => {})
     } else {
       msg.channel.guild.getAuditLogs(suffix).then((logs) => {
-        let fields = []
         let what
+        let fieldsArrs = {
+          0: []
+        }
+        let counter = 0
         logs.entries.forEach((log) => {
           what = typeName(log.actionType)
           let reason = log.reason
@@ -932,17 +961,36 @@ Commands.auditlogs = {
           if (log.member) {
             who = log.member.username ? `**${log.member.username}#${log.member.discriminator}**` : `${msg.channel.guild.members.get(log.member.id).username}#${msg.channel.guild.members.get(log.member.id).discriminator}`
           }
-          fields.push({
-            name: what,
-            value: `From **${user.username}#${user.discriminator}** against/affecting ${who} ${reason ? `with the reason \`${reason}\`` : ''}`
-          })
+          if (fieldsArrs[counter].length < 25) {
+            fieldsArrs[counter].push({
+              name: what,
+              value: `From **${user.username}#${user.discriminator}** against/affecting ${who} ${reason ? `with the reason \`${reason}\`` : ''}`
+            })
+          } else {
+            counter = counter + 1
+            fieldsArrs[counter] = []
+            fieldsArrs[counter].push({
+              name: what,
+              value: `From **${user.username}#${user.discriminator}** against/affecting ${who} ${reason ? `with the reason \`${reason}\`` : ''}`
+            })
+          }
         })
-        msg.channel.createMessage({content: `__Showing last **${suffix}** logs.__`,
-          embed: {
-            timestamp: new Date(msg.timestamp),
-            color: 8039393,
-            fields: fields
-          }}).catch(() => {})
+        Object.keys(fieldsArrs).forEach((num) => {
+          if (num === 0) {
+            msg.channel.createMessage({content: `__Showing last **${suffix}** logs.__`,
+              embed: {
+                timestamp: new Date(msg.timestamp),
+                color: 8039393,
+                fields: fieldsArrs[num]
+              }}).catch(() => {})
+          } else {
+            msg.channel.createMessage({embed: {
+              timestamp: new Date(msg.timestamp),
+              color: 8039393,
+              fields: fieldsArrs[num]
+            }}).catch(() => {})
+          }
+        })
       })
     }
   }

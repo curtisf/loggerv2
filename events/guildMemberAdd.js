@@ -13,7 +13,7 @@ module.exports = {
     if (member) {
       let obj = {
         guildID: guild.id,
-        type: `Member Joined${member.id === '212445217763229699' ? ' (Logger Staff)' : ''}`,
+        type: `Member Joined${member.id === '212445217763229699' ? '🛡 Dev' : ''}`,
         changed: `► Name: **[\`${member.username}#${member.discriminator}\`](https://cdn.discordapp.com/avatars/${member.id}/${member.avatar}.jpg)** (${member.id})\n► Account Age: **${Math.floor((new Date() - member.user.createdAt) / 86400000)}** days\n► Joined At: **${new Date(member.joinedAt).toString().substr(0, 21)}**${member.bot ? '\n► Joined via OAuth invite.' : ''}`,
         color: 65355,
         against: member,

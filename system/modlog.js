@@ -47,8 +47,6 @@ function sendToLog (type, bot, obj, optGuild, optChannel, fields) {
     })
   } else if (!obj.guildID) {
     log.warn('Object sent to modlog was missing Guild ID!')
-  } else if (!obj.changed) {
-    log.warn('Object sent to modlog was missing what changed!')
   } else if (!obj.type) {
     log.warn('Object sent to modlog was missing the type of change!')
   } else {
@@ -70,6 +68,9 @@ function sendToLog (type, bot, obj, optGuild, optChannel, fields) {
         'name': `${obj.type}`,
         'value': `${obj.changed}`
       })
+    }
+    if (obj.timestamp) {
+      abstractEmbed.timestamp = new Date(parseInt(obj.timestamp))
     }
     if (obj.from) {
       obj.from.avatar ? abstractEmbed.footer.icon_url = `https://cdn.discordapp.com/avatars/${obj.from.id}/${obj.from.avatar}.png` : abstractEmbed.author.icon_url = `https://cdn.discordapp.com/embed/avatars/${obj.from.discriminator % 5}.png?size=1024`
@@ -126,7 +127,15 @@ function sendToLog (type, bot, obj, optGuild, optChannel, fields) {
             ch = bot.getChannel(feeds[typeCategoryMap[type]].channelID)
           } catch (_) {}
           if (ch) {
-            ch.createMessage(messageObj).catch(() => {})
+            if (obj.base64) {
+              ch.createMessage(messageObj).catch(() => {})
+              ch.createMessage('Message had an attachment:', {
+                file: new Buffer(obj.base64, 'base64'),
+                name: 'deleted.png'
+              }).catch(() => {})
+            } else {
+              ch.createMessage(messageObj).catch(() => {})
+            }
           }
         }
       }
