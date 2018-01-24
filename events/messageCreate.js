@@ -13,22 +13,13 @@ module.exports = {
   run: function (bot, msg) {
     if (msg.author.bot || msg.author.id === bot.user.id) {
     // Ignore
-    } else if (!msg.channel.guild) {
-      if (msg.content.startsWith(Config.core.prefix)) {
-        if (msg.content.substring(Config.core.prefix.length).split(' ')[0].toLowerCase() === 'join') {
-          Commands.join.func(msg)
-        } else {
-          msg.channel.sendMessage(`I can't be used in DMs! Please invite me to a server using ${Config.core.prefix}join and try again.`)
-        }
-      }
-    } else {
+    } else if (msg.channel.guild) {
       Redis.set(`${msg.id}:content`, msg.content)
       Redis.set(`${msg.id}:from`, `${msg.author.id}|${msg.author.username}|${msg.channel.id}|${msg.channel.guild.id}|${msg.author.discriminator}|${msg.author.avatar}`)
       Redis.set(`${msg.id}:timestamp`, msg.timestamp)
       if (msg.attachments.length !== 0 && (msg.attachments[0].filename.endsWith('png') || msg.attachments[0].filename.endsWith('jpg'))) {
         superagent.get(msg.attachments[0].url).end((err, res) => {
           if (err) log.error(err)
-          console.log('stored base64 in redis')
           Redis.set(`${msg.id}:image`, new Buffer(res.body).toString('base64'))
         })
       }
