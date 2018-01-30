@@ -127,15 +127,8 @@ function sendToLog (type, bot, obj, optGuild, optChannel, fields) {
             ch = bot.getChannel(feeds[typeCategoryMap[type]].channelID)
           } catch (_) {}
           if (ch) {
-            if (obj.base64) {
-              ch.createMessage(messageObj).catch(() => {})
-              ch.createMessage('Message had an attachment:', {
-                file: new Buffer(obj.base64, 'base64'),
-                name: 'deleted.png'
-              }).catch(() => {})
-            } else {
-              ch.createMessage(messageObj).catch(() => {})
-            }
+            messageObj.content = messageObj.content.substr(0, 1800)
+            ch.createMessage(messageObj).catch(() => {})
           }
         }
       }

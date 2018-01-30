@@ -4,7 +4,7 @@ module.exports = {
   name: 'guildEmojisUpdate',
   type: 'guildEmojisUpdate',
   toggleable: true,
-  run: function (bot, raw) {
+  run: function (bot, raw) { /*
     let newEmojis = raw.newEmojis
     let oldEmojis = raw.oldEmojis
     let guild = raw.guild
@@ -49,6 +49,6 @@ module.exports = {
           sendToLog(this.name, bot, obj)
         }
       }).catch(() => {})
-    }
+    }  */
   }
 }

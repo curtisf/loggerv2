@@ -14,15 +14,6 @@ module.exports = {
     if (msg.author.bot || msg.author.id === bot.user.id) {
     // Ignore
     } else if (msg.channel.guild) {
-      Redis.set(`${msg.id}:content`, msg.content)
-      Redis.set(`${msg.id}:from`, `${msg.author.id}|${msg.author.username}|${msg.channel.id}|${msg.channel.guild.id}|${msg.author.discriminator}|${msg.author.avatar}`)
-      Redis.set(`${msg.id}:timestamp`, msg.timestamp)
-      if (msg.attachments.length !== 0 && (msg.attachments[0].filename.endsWith('png') || msg.attachments[0].filename.endsWith('jpg'))) {
-        superagent.get(msg.attachments[0].url).end((err, res) => {
-          if (err) log.error(err)
-          Redis.set(`${msg.id}:image`, new Buffer(res.body).toString('base64'))
-        })
-      }
         // Command detection
       let prefix = Config.core.prefix
       if (msg.content.startsWith(prefix)) {
