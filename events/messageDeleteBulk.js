@@ -34,7 +34,7 @@ module.exports = {
         language: 'text',
         private: true,
         title: `${channel.name.substr(0, 29)}`,
-        expire: '43800'
+        expire: '21600'
       })
       .end((err, res) => {
         if (!err && res.statusCode === 200 && res.body.result.id) { // weird error reporting system.

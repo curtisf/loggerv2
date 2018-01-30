@@ -593,7 +593,7 @@ Commands.archive = {
         language: 'text',
         private: true,
         title: `${msg.channel.name.substr(0, 20)}`,
-        expire: '43800'
+        expire: '21600'
       })
       .end((err, res) => {
         if (!err && res.statusCode === 200 && res.body.result.id) {
