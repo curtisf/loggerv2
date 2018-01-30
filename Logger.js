@@ -108,7 +108,6 @@ bot.on('guildBanRemove', (guild, user) => {
 
 bot.on('guildCreate', (guild) => {
   if (guild.memberCount > 5) {
-    Dog.gauge('total_bot_guilds.int', bot.guilds.size)
     middleware('guildCreate', guild)
   } else {
     guild.leave()
@@ -116,7 +115,6 @@ bot.on('guildCreate', (guild) => {
 })
 
 bot.on('guildDelete', (guild) => {
-  Dog.gauge('total_bot_guilds.int', bot.guilds.size)
   middleware('guildDelete', guild)
 })
 
