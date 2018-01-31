@@ -81,20 +81,32 @@ function updateOverview (guildID) {
             guild.getBans().then((b, banserror) => {
               guild.getAuditLogs(1, null, 22).then((log, auditerror) => {
                 log = log.entries[0]
-                let user = log.user
-                bot.getRESTUser(log.targetID).then((affected) => {
-                  log.guild = []
-                  if (banserror || auditerror) {
-                    fields.push({
-                      'name': 'Ban Count',
-                      'value': '► Missing Permissions'
-                    })
-                  } else {
-                    fields.push({
-                      'name': 'Ban Count',
-                      'value': `► ${b.length === 0 ? '0' : `**${b.length}** | Latest Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`}`
-                    })
-                  }
+                let user
+                if (log) {
+                  user = log.user
+                  bot.getRESTUser(log.targetID).then((affected) => {
+                    log.guild = []
+                    if (banserror || auditerror) {
+                      fields.push({
+                        'name': 'Ban Count',
+                        'value': '► Missing Permissions'
+                      })
+                    } else {
+                      fields.push({
+                        'name': 'Ban Count',
+                        'value': user ? `► ${b.length === 0 ? '0' : `**${b.length}**\nLatest Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`}` : 'None yet!'
+                      })
+                    }
+                    send()
+                  })
+                } else {
+                  fields.push({
+                    'name': 'Ban Count',
+                    'value': 'None yet!'
+                  })
+                  send()
+                }
+                function send() {
                   bot.editMessage(channelID, messageID, {
                     content: '**Live Stats**',
                     embed: {
@@ -118,7 +130,7 @@ function updateOverview (guildID) {
                       }
                     })
                   })
-                })
+                }
               })
             }).catch(() => {})
           }
