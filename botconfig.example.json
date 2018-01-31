@@ -19,11 +19,13 @@
             "bot_id": "Discord Bots bot ID"
         }
     },
-    "datadog": {
-        "use": false
+    "influx": {
+        "use": false,
+        "username": "",
+        "password": ""
     },
     "misc": {
-        "defaultGame": "LoggerV2 | %setchannel | https://whatezlife.com/logger"
+        "defaultGame": "LoggerV2 | %setchannel | https://whatezlife.com/dashboard/"
     },
     "commands": {
         "eval": ["212445217763229699"]

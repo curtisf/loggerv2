@@ -21,12 +21,13 @@ module.exports = {
             })
           }
         }
-        sendToLog(bot, {
+        sendToLog(this.name, bot, {
           guildID: guild.id,
           type: 'Role Updated',
           changed: `► Name: **${newRole.name}**\n► ID: **${newRole.id}**`,
           color: newRole.color,
-          from: log.users[0]
+          from: log.users[0],
+          simple: `**${log.users[0].username}#${log.users[0].discriminator}** updated role: ${newRole.name}`
         }, null, null, fields)
       }).catch(() => {})
     }

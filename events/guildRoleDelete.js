@@ -1,10 +1,12 @@
 import { sendToLog } from '../system/modlog'
+import { updateOverview } from '../handlers/read'
 
 module.exports = {
   name: 'guildRoleDelete',
   type: 'guildRoleDelete',
   toggleable: true,
   run: function (bot, raw) {
+    updateOverview(raw.guild.id)
     let guild = raw.guild
     let role = raw.role
     let keys
@@ -19,7 +21,8 @@ module.exports = {
       guild.getAuditLogs(1, null, 32).then((entry) => {
         let user = entry.entries[0].user
         obj.from = user
-        sendToLog(bot, obj)
+        obj.simple = `**${user.username}#${user.discriminator}** deleted a role which I don't know.`
+        sendToLog(this.name, bot, obj)
       }).catch(() => {})
     }
     let perms = []
@@ -41,7 +44,8 @@ module.exports = {
     guild.getAuditLogs(1, null, 32).then((entry) => {
       let user = entry.entries[0].user
       obj.from = user
-      sendToLog(bot, obj)
+      obj.simple = `**${user.username}#${user.discriminator}** deleted role: ${role.name}`
+      sendToLog(this.name, bot, obj)
     }).catch(() => {})
   }
 }

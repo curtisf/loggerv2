@@ -1,22 +1,19 @@
-import { Dog } from '../Logger'
+import { Redis } from '../Logger'
 import { log } from '../system/log'
+import { influx } from '../system/middleware'
+const os = require('os')
+let superagent = require('superagent')
 const Config = require('../botconfig.json')
 let Commands = require('../system/commands').Commands
+let commandObj = {}
+Object.keys(Commands).forEach((command) => commandObj[command] = 0)
 
 module.exports = {
   toggleable: false,
   run: function (bot, msg) {
     if (msg.author.bot || msg.author.id === bot.user.id) {
     // Ignore
-    } else if (!msg.channel.guild) {
-      if (msg.content.startsWith(Config.core.prefix)) {
-        if (msg.content.substring(Config.core.prefix.length).split(' ')[0].toLowerCase() === 'join') {
-          Commands.join.func(msg)
-        } else {
-          msg.channel.sendMessage(`I can't be used in DMs! Please invite me to a server using ${Config.core.prefix}join and try again.`)
-        }
-      }
-    } else {
+    } else if (msg.channel.guild) {
         // Command detection
       let prefix = Config.core.prefix
       if (msg.content.startsWith(prefix)) {
@@ -41,15 +38,13 @@ module.exports = {
               gd.defaultChannel = []
               gd.shard = []
               gd.toString = 'no.'
-              if (Config.datadog.use) {
-		Dog.incrementBy('bot.totalCommands', 1)
-              }
               log.info(`Command "${cmd}${suffix ? ` ${suffix}` : ''}" from user ${msg.author.username}#${msg.author.discriminator} (${msg.author.id})\n`, {
                 guild: gd,
                 botID: bot.user.id,
                 cmd: cmd,
                 shard: msg.channel.guild.shard.id
               })
+              commandObj[cmd]++
               Commands[cmd].func(msg, suffix, bot)
             }
           } catch (err) {
@@ -60,4 +55,19 @@ module.exports = {
       }
     }
   }
+}
+
+if (Config.influx.use) {
+  setInterval(() => {
+    let allToSend = []
+    Object.keys(commandObj).forEach((event) => {
+      allToSend.push({
+        measurement: event,
+        tags: { host: os.hostname() },
+        fields: { count: commandObj[event] }
+      })
+      commandObj[event] = 0
+    })
+    influx.writePoints(allToSend)
+  }, 60000)
 }

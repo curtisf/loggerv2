@@ -18,9 +18,28 @@ function createGuild (guild) {
   r.db('Logger').table('Guilds').insert({
     'id': guild.id,
     'ignoredChannels': [],
-    'disabledEvents': ['voiceChannelJoin', 'voiceChannelLeave', 'voiceChannelSwitch'],
+    'disabledEvents': ['voiceChannelJoin', 'voiceChannelLeave', 'voiceChannelSwitch', 'guildEmojisUpdate'],
     'logchannel': '',
-    'ownerID': guild.ownerID
+    'ownerID': guild.ownerID,
+    'overviewID': '',
+    'logBots': false,
+    'feeds': {
+      'messages': {
+        'channelID': ''
+      },
+      'mod': {
+        'channelID': ''
+      },
+      'voice': {
+        'channelID': ''
+      },
+      'server': {
+        'channelID': ''
+      },
+      'joinlog': {
+        'channelID': ''
+      }
+    }
   }).run().then((r) => {
     if (r.inserted) {
       let owner = bot.users.find(u => u.id === guild.ownerID)

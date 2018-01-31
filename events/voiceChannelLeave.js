@@ -7,12 +7,13 @@ module.exports = {
   run: function (bot, raw) {
     let channel = raw.channel
     let member = raw.member
-    sendToLog(bot, {
+    sendToLog(this.name, bot, {
       guildID: channel.guild.id,
       type: 'User Left Voice Channel',
       changed: `► User: **${member.username}#${member.discriminator}**\n► User ID: **${member.id}**\n► Channel: **${channel.name}**\n► Channel ID: **${channel.id}**`,
       color: 8351671,
-      against: member
+      against: member,
+      simple: `**${member.username}#${member.discriminator}** left voice channel: **${channel.name}**`
     })
   }
 }

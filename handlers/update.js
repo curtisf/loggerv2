@@ -9,7 +9,7 @@ Raven.config(Config.raven.url).install()
 function updateGuildDocument (guildID, toUpdate) {
   return new Promise((resolve, reject) => {
     r.db('Logger').table('Guilds').get(guildID).update(toUpdate).run().then((response) => {
-      if (response.replaced || response.skipped || response.unchanged) {
+      if (response.replaced || response.skipped || response.unchanged || response.inserted) {
         resolve(true)
         loadToRedis(guildID)
       } else {

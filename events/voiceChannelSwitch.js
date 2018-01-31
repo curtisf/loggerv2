@@ -8,12 +8,13 @@ module.exports = {
     let oldChannel = raw.oldChannel
     let newChannel = raw.newChannel
     let member = raw.member
-    sendToLog(bot, {
+    sendToLog(this.name, bot, {
       guildID: newChannel.guild.id,
       type: 'User Switched Voice Channels',
       changed: `► User: **${member.username}#${member.discriminator}**\n► User ID: **${member.id}**\n► Now Connected To: **${newChannel.name}**\n► Previously Connected To: **${oldChannel.name}**`,
       color: 8351671,
-      against: member
+      against: member,
+      simple: `**${member.username}#${member.discriminator}** left voice channel **${oldChannel.name}** and joined **${newChannel.name}**.`
     })
   }
 }

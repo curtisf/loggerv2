@@ -62,16 +62,22 @@ function checkCanUse (id, command) {
 }
 
 function checkIfAllowed (msg) {
-  let userPerms = msg.channel.guild.members.get(msg.author.id).permission.json
-  let isDev = checkCanUse(msg.author.id, 'eval')
-  if (isDev) {
-    return true
-  } else if (msg.author.id === msg.channel.guild.ownerID) {
-    return true
-  } else if (userPerms.administrator || userPerms.manageGuild) {
-    return true
+  if (msg.author.id) {
+    let userPerms = msg.channel.guild.members.get(msg.author.id).permission.json
+    let isDev = checkCanUse(msg.author.id, 'eval')
+    if (isDev) {
+      return true
+    } else if (msg.author.id === msg.channel.guild.ownerID) {
+      return true
+    } else if (userPerms.administrator || userPerms.manageGuild) {
+      return true
+    } else if (msg.member.roles.includes(msg.channel.guild.roles.find(r => r.name.toLowerCase() === 'quartermaster').id)) {
+      return true
+    } else {
+      return false
+    }
   } else {
-    return false
+    return false // thanks caching problems
   }
 }
 
