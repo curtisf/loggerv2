@@ -3,7 +3,7 @@ import { log } from '../system/log'
 import { r } from '../system/rethinkclient'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
-Raven.config(Config.raven.url).install()
+Raven.config(process.env.RAVEN_URI).install()
 
 function recoverGuild (guildID) {
   let guild = bot.guilds.find(g => g.id === guildID)

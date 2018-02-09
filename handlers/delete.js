@@ -1,7 +1,7 @@
 import { r } from '../system/rethinkclient'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
-Raven.config(Config.raven.url).install()
+Raven.config(process.env.RAVEN_URI).install()
 
 function deleteGuildDocument (guildID) {
   return new Promise((resolve, reject) => {

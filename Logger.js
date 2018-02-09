@@ -5,6 +5,7 @@ import redis from 'redis'
 import * as request from 'superagent'
 import spawn from 'cross-spawn'
 import { getUserDocument, loadToRedis } from './handlers/read'
+import * as ws from 'ws'
 
 if (!process.env.BOT_TOKEN) {
   log.error("No bot token in the environment!!!")
@@ -22,20 +23,24 @@ if (!process.env.RAVEN_URI) {
   log.error("No raven uri!")
   process.exit()
 }
+if (!process.env.DASHBOARD_URI) {
+  log.error("No dashboard URI!")
+  process.exit()
+}
 if (!process.env.DBOTS_TOKEN) log.warn("No dbots token")
 
-process.title = 'Logger v2.5'
+process.title = 'Logger v2.6'
 
 const Config = require('./botconfig.json')
 let bot
 if (Config.shardMode === true) {
-  bot = new Eris(Config.core.token, {
+  bot = new Eris(process.env.BOT_TOKEN, {
     getAllUsers: true,
     maxShards: Config.shardCount,
     restMode: true
   })
 } else {
-  bot = new Eris(Config.core.token, {
+  bot = new Eris(process.env.BOT_TOKEN, {
     getAllUsers: true,
     restMode: true
   })
@@ -45,7 +50,7 @@ bluebird.promisifyAll(redis.Multi.prototype)
 const Redis = redis.createClient()
 const middleware = require('./system/middleware').handle
 const Raven = require('raven')
-Raven.config(Config.raven.url).install()
+Raven.config(process.env.RAVEN_URI).install()
 
 let restarts = 0
 
@@ -274,16 +279,17 @@ function postToDbots (count) {
   }
 }
 
-let processes = []
-
 if (Config.dev.usedash === true) {
-  processes['dashboard'] = {
-    process: spawn('node', [Config.dev.filepath], {
-	  cwd: Config.dev.dirpath,
-      detached: false,
-      stdio: ['inherit', 'inherit', 'inherit', 'ipc']
-    })
-    .on('message', message => {
+let ws = new ws(process.env.DASHBOARD_URI)
+ws.on('open', () => { console.log("Connected to dashboard!") })
+ws.on('close', () => { 
+log.warn("Lost connection to dashboard! Trying to reconnect in 10 seconds.") 
+setTimeout(() => {
+ws = new ws(process.env.DASHBOARD_URI)
+log.info("Attempting to reconnect.")
+}, 10000)
+})
+ws.on('message', message => {
       message = JSON.parse(message)
       if (!message.op) {
         log.warn('Invalid request from child process, denying.', message)
@@ -377,7 +383,6 @@ if (Config.dev.usedash === true) {
       }
     })
   }
-}
 
 process.on('exit', function () {
   Object.keys(processes).forEach((key) => {

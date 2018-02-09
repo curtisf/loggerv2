@@ -4,7 +4,7 @@ import { createUserDocument } from './create'
 import { loadToRedis } from './read'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
-Raven.config(Config.raven.url).install()
+Raven.config(process.env.RAVEN_URI).install()
 
 function updateGuildDocument (guildID, toUpdate) {
   return new Promise((resolve, reject) => {

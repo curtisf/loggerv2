@@ -3,7 +3,7 @@ import { log } from './log'
 import { Redis } from '../Logger'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
-Raven.config(Config.raven.url).install()
+Raven.config(process.env.RAVEN_URI).install()
 
 let typeCategoryMap = {
   channelCreate: 'server',

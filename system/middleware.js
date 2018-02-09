@@ -120,7 +120,7 @@ let eventCounts = {
 }
 
 const Raven = require('raven')
-Raven.config(Config.raven.url).install()
+Raven.config(process.env.RAVEN_URI).install()
 
 const dir = require('require-all')(path.join(__dirname, '/../events'))
 let total = 0

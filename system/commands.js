@@ -6,7 +6,7 @@ import path from 'path'
 const Config = require('../botconfig.json')
 const Raven = require('raven')
 const SA = require('superagent')
-Raven.config(Config.raven.url).install()
+Raven.config(process.env.RAVEN_URI).install()
 
 let eventsObj = require('require-all')(path.join(__dirname, '/../events'))
 let events = ['all']
