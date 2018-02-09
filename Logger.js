@@ -2,10 +2,27 @@ import bluebird from 'bluebird'
 import Eris from 'eris'
 import { log } from './system/log'
 import redis from 'redis'
-import sleep from 'sleep'
 import * as request from 'superagent'
 import spawn from 'cross-spawn'
 import { getUserDocument, loadToRedis } from './handlers/read'
+
+if (!process.env.BOT_TOKEN) {
+  log.error("No bot token in the environment!!!")
+  process.exit()
+} 
+if (!process.env.INFLUX_USERNAME || !process.env.INFLUX_PASSWORD) {
+  log.error("No influx username or password detected!!")
+  process.exit()
+}
+if (!process.env.SHARD_ID) {
+  log.error("No shard id defined!")
+  process.exit()
+}
+if (!process.env.RAVEN_URI) {
+  log.error("No raven uri!")
+  process.exit()
+}
+if (!process.env.DBOTS_TOKEN) log.warn("No dbots token")
 
 process.title = 'Logger v2.5'
 
@@ -66,7 +83,6 @@ function init () {
     restarts++
   } else {
     log.error('Maximum amount of restarts reached, permanently sleeping.')
-    sleep.sleep(99999999) // hopefully we'll be awake by then
   }
 }
 
