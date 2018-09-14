@@ -21,10 +21,12 @@ let typeCategoryMap = {
   messageUpdate: 'messages',
   guildMemberAdd: 'joinlog',
   guildMemberRemove: 'joinlog',
+  guildMemberKick: 'mod',
   guildMemberUpdate: 'mod',
   voiceChannelLeave: 'voice',
   voiceChannelJoin: 'voice',
   voiceChannelSwitch: 'voice',
+  voiceStateUpdate: 'voice',
   guildEmojisUpdate: 'server'
 }
 
@@ -111,10 +113,10 @@ function sendToLog (type, bot, obj, optGuild, optChannel, fields) {
       if (channel !== false) {
         if (obj.channelID) {
           if (channel.id !== obj.channelID) {
-            channel.createMessage(messageObj).catch(() => {})
+            channel.createMessage(messageObj, obj.file ? obj.file : null).catch(() => {})
           }
         } else {
-          channel.createMessage(messageObj).catch(() => {})
+          channel.createMessage(messageObj, obj.file ? obj.file : null).catch(() => {})
         }
       }
     })
@@ -128,7 +130,7 @@ function sendToLog (type, bot, obj, optGuild, optChannel, fields) {
           } catch (_) {}
           if (ch) {
             messageObj.content = messageObj.content.substr(0, 1800)
-            ch.createMessage(messageObj).catch(() => {})
+            ch.createMessage(messageObj, obj.file ? obj.file : null).catch(() => {})
           }
         }
       }

@@ -2,19 +2,26 @@ import bluebird from 'bluebird'
 import Eris from 'eris'
 import { log } from './system/log'
 import redis from 'redis'
-import sleep from 'sleep'
 import * as request from 'superagent'
 import spawn from 'cross-spawn'
 import { getUserDocument, loadToRedis } from './handlers/read'
 
 process.title = 'Logger v2.5'
 
+let argv = require('minimist')(process.argv.slice(2))
+
+if (argv.token) {
+  log.info(`Shard mode enabled, assigned shard id: ${argv.shardid}`)
+}
+
 const Config = require('./botconfig.json')
 let bot
-if (Config.shardMode === true) {
-  bot = new Eris(Config.core.token, {
+if (argv.token) {
+  bot = new Eris(argv.token, {
     getAllUsers: true,
-    maxShards: Config.shardCount,
+    firstShardID: argv.shardid,
+    lastShardID: argv.shardid,
+    maxShards: argv.shardtotal,
     restMode: true
   })
 } else {
@@ -45,6 +52,14 @@ bot.on('ready', () => {
     postToDbots(bot.guilds.size)
     log.info(`Hello Discord! I'm ${user.username}#${user.discriminator} (${user.id}), in ${bot.guilds.size} servers with ${bot.users.size} known members.`)
   })
+  if (process.send) {
+    process.send({
+      op: 'HELLO',
+      shardID: argv.shardid,
+      guildCount: bot.guilds.size,
+      userCount: bot.users.size
+    })
+  }
 })
 
 bot.on('disconnect', () => {
@@ -55,7 +70,7 @@ bot.on('error', (e) => {
   log.error('Shard encountered an error!', e)
 })
 
-function init () {
+function init() {
   if (restarts === 0) {
     bot.connect()
     log.info('Booting up, no restarts...')
@@ -65,8 +80,7 @@ function init () {
     log.info(`Booting up... ${restarts} restarts.`)
     restarts++
   } else {
-    log.error('Maximum amount of restarts reached, permanently sleeping.')
-    sleep.sleep(99999999) // hopefully we'll be awake by then
+    log.error('Maximum amount of restarts reached, refusing to reconnect.')
   }
 }
 
@@ -200,16 +214,35 @@ bot.on('guildMemberRemove', (guild, member) => {
     let g = {}
     g.guild = guild
     g.member = member
-    middleware('guildMemberRemove', g, guild.id)
+    if (guild.members.get(bot.user.id).permission.json['viewAuditLogs']) {
+      guild.getAuditLogs(1, null, 20).then((audit) => {
+        if (audit.entries.length !== 0) {
+          let auditEntryDate = new Date((audit.entries[0].id / 4194304) + 1420070400000)
+          if (new Date().getTime() - auditEntryDate.getTime() < 3000) {
+            g.perpetrator = audit.entries[0].user
+            g.reason = audit.entries[0].reason ? audit.entries[0].reason : 'None provided.'
+            middleware('guildMemberKick', g, guild.id)
+          } else {
+            middleware('guildMemberRemove', g, guild.id)
+          }
+        } else {
+          middleware('guildMemberRemove', g, guild.id)
+        }
+      }).catch(log.error)
+    } else {
+      middleware('guildMemberRemove', g, guild.id)
+    }
   }
 })
 
 bot.on('guildMemberUpdate', (guild, member, oldMember) => {
-  let g = {}
-  g.guild = guild
-  g.member = member
-  g.oldMember = oldMember
-  middleware('guildMemberUpdate', g, guild.id)
+  if (member && oldMember) {
+    let g = {}
+    g.guild = guild
+    g.member = member
+    g.oldMember = oldMember
+    middleware('guildMemberUpdate', g, guild.id)
+  }
 })
 
 bot.on('userUpdate', (newUser, oldUser) => {
@@ -241,7 +274,14 @@ bot.on('voiceChannelSwitch', (member, newChannel, oldChannel) => {
   middleware('voiceChannelSwitch', c, newChannel.guild.id)
 })
 
-function postToDbots (count) {
+bot.on('voiceStateUpdate', (member, oldState) => {
+  let v = {}
+  v.member = member
+  v.old = oldState
+  middleware('voiceStateUpdate', v, member.guild.id)
+})
+
+function postToDbots(count) {
   if (Config.stats.dbots.enabled === true) {
     request
       .post(`https://bots.discord.pw/api/bots/${Config.stats.dbots.bot_id}/stats`)
@@ -258,116 +298,146 @@ function postToDbots (count) {
   }
 }
 
-let processes = []
-
-if (Config.dev.usedash === true) {
-  processes['dashboard'] = {
-    process: spawn('node', [Config.dev.filepath], {
-	  cwd: Config.dev.dirpath,
-      detached: false,
-      stdio: ['inherit', 'inherit', 'inherit', 'ipc']
-    })
-    .on('message', message => {
-      message = JSON.parse(message)
-      if (!message.op) {
-        log.warn('Invalid request from child process, denying.', message)
-      } else {
-        switch (message.op) {
-          case 'GETUSER':
-            processes['dashboard'].process.send({
-              op: 'GETUSER_RESPONSE',
-              c: JSON.stringify(bot.users.get(message.id), null, '   '),
-              requestedID: message.id
-            })
-            break
-          case 'GUILD_FETCH':
-            processes['dashboard'].process.send({
-              op: 'GUILD_FETCH_RESPONSE',
-              c: bot.guilds.get(message.id),
-              requestedID: message.id
-            })
-            break
-          case 'GET_USER_PERMS_GUILD':
-            processes['dashboard'].process.send({
+if (process.send) {
+  process.on('message', message => {
+    if (message === 'Hello!') process.send('Hello!')
+    message = JSON.parse(message)
+    if (!message.op) {
+      log.warn('Invalid request from child process, denying.', message)
+    } else if (bot.ready) {
+      switch (message.op) {
+        case 'EVAL':
+          process.send(JSON.stringify({
+            op: 'EVAL_RESPONSE',
+            c: JSON.stringify(eval(message.c)),
+            shardID: argv.shardid
+          }))
+          break
+        case 'GET_USER':
+          process.send(JSON.stringify({
+            op: 'GET_USER_RESPONSE',
+            c: JSON.stringify(bot.users.get(message.id), null, '   '),
+            requestedID: message.id,
+            shardID: argv.shardid
+          }))
+          break
+        case 'GUILD_FETCH':
+          process.send(JSON.stringify({
+            op: 'GUILD_FETCH_RESPONSE',
+            c: bot.guilds.get(message.id),
+            requestedID: message.id,
+            shardID: argv.shardid
+          }))
+          break
+        case 'GET_USER_PERMS_GUILD':
+          let tempGuild = bot.guilds.get(message.id)
+          if (tempGuild) {
+            process.send(JSON.stringify({
               op: 'GET_USER_PERMS_GUILD_RESPONSE',
-              c: bot.guilds.get(message.id).members.get(message.userID).permission.json,
-              requestedID: message.id
+              c: tempGuild.members.get(message.userID).permission.json,
+              requestedID: message.id,
+              shardID: argv.shardid
+            }))
+          } else {
+            process.send(JSON.stringify({
+              op: 'GET_USER_PERMS_GUILD_RESPONSE',
+              c: null,
+              requestedID: message.id,
+              shardID: argv.shardid
+            }))
+          }
+          break
+        case 'GET_EDITABLE_GUILDS':
+          let editableServers = []
+          if (message.c) {
+            message.c.forEach((guild) => {
+              if (bot.guilds.get(guild.id) && (bot.guilds.get(guild.id).members.get(message.id).permission.json.manageGuild || bot.guilds.get(guild.id).members.get(message.id).permission.json.administrator)) {
+                editableServers.push({
+                  name: guild.name,
+                  id: guild.id,
+                  owner: guild.owner ? 'You' : bot.users.get(bot.guilds.get(guild.id).ownerID).username,
+                  iconURL: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : 'https://s15.postimg.cc/nke6jbnyz/redcircle.png'
+                })
+              }
             })
-            break
-          case 'GET_EDITABLE_GUILDS':
-            let editableServers = []
-            if (message.content) {
-              message.content.forEach((guild) => {
-                if (bot.guilds.get(guild.id) && (bot.guilds.get(guild.id).members.get(message.id).permission.json.manageGuild || bot.guilds.get(guild.id).members.get(message.id).permission.json.administrator)) {
-                  editableServers.push({
-                    name: guild.name,
-                    id: guild.id,
-                    owner: guild.owner ? 'You' : bot.users.get(bot.guilds.get(guild.id).ownerID).username,
-                    iconURL: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=256` : 'https://whatezlife.com/images/unavailable.png'
-                  })
-                }
-              })
-              processes['dashboard'].process.send({
-                op: 'GET_EDITABLE_GUILDS_RESPONSE',
-                c: editableServers,
-                requestedID: message.id
-              })
-            } else {
-              processes['dashboard'].process.send({
-                op: 'GET_EDITABLE_GUILDS_RESPONSE',
-                c: [],
-                requestedID: message.id
-              })
-            }
-            break
-          case 'GET_LASTNAMES':
-            getUserDocument(message.id).then((doc) => {
-              processes['dashboard'].process.send({
-                op: 'GET_LASTNAMES_RESPONSE',
-                c: doc.names ? doc.names : ['None'],
-                requestedID: message.id
-              })
-            })
-            break
-          case 'GET_ACCESSABLE_CHANNELS':
-            let guild = bot.guilds.get(message.content)
-            let accessableChannels = guild.channels.filter(c => c.type === 0).filter((c) => {
+            process.send(JSON.stringify({
+              op: 'GET_EDITABLE_GUILDS_RESPONSE',
+              c: editableServers,
+              requestedID: message.id,
+              shardID: argv.shardid
+            }))
+          } else {
+            process.send(JSON.stringify({
+              op: 'GET_EDITABLE_GUILDS_RESPONSE',
+              c: [],
+              requestedID: message.id,
+              shardID: argv.shardid
+            }))
+          }
+          break
+        case 'GET_LASTNAMES':
+          getUserDocument(message.id).then((doc) => {
+            process.send(JSON.stringify({
+              op: 'GET_LASTNAMES_RESPONSE',
+              c: doc.names ? doc.names : ['None'],
+              requestedID: message.id,
+              shardID: argv.shardid
+            }))
+          })
+          break
+        case 'GET_ACCESSABLE_CHANNELS':
+          let accessableChannels = []
+          let guild = bot.guilds.get(message.c)
+          if (guild) {
+            accessableChannels = guild.channels.filter(c => c.type === 0).filter((c) => {
               if (c.permissionsOf(message.id).json['sendMessages']) {
                 return true
               } else {
                 return false
               }
             })
-            processes['dashboard'].process.send({
-              op: 'GET_ACCESSABLE_CHANNELS_RESPONSE',
-              c: accessableChannels,
-              requestedID: message.id
-            })
-            break
-          case 'CHANNEL_FETCH':
-            processes['dashboard'].process.send({
-              op: 'CHANNEL_FETCH_RESPONSE',
-              c: bot.getChannel(message.id),
-              requestedID: message.id
-            })
-            break
-          case 'RECACHE_REDIS':
-            loadToRedis(message.id)
-            processes['dashboard'].process.send({
-              op: 'RECACHE_REDIS_RESPONSE',
-              requestedID: message.id
-            })
-        }
+          }
+          process.send(JSON.stringify({
+            op: 'GET_ACCESSABLE_CHANNELS_RESPONSE',
+            c: accessableChannels,
+            requestedID: message.id,
+            shardID: argv.shardid
+          }))
+          break
+        case 'CHANNEL_FETCH':
+          process.send(JSON.stringify({
+            op: 'CHANNEL_FETCH_RESPONSE',
+            c: bot.getChannel(message.id),
+            requestedID: message.id,
+            shardID: argv.shardid
+          }))
+          break
+        case 'RECACHE_REDIS':
+          loadToRedis(message.id)
+          process.send(JSON.stringify({
+            op: 'RECACHE_REDIS_RESPONSE',
+            requestedID: message.id,
+            shardID: argv.shardid
+          }))
+          break
+        case 'HEARTBEAT':
+          process.send(JSON.stringify({
+            op: 'HEARTBEAT_RESPONSE',
+            shardID: argv.shardid,
+            ready: bot.ready
+          }))
+          break
       }
-    })
-  }
-}
-
-process.on('exit', function () {
-  Object.keys(processes).forEach((key) => {
-    processes[key].process.kill()
-    console.log(`Killed ${key} due to main process dying.`)
+    } else {
+      process.send(JSON.stringify({
+        op: 'SHARD_BOOTING',
+        shardID: argv.shardid
+      }))
+    }
   })
-})
+
+} else {
+  log.info('IPC shard manager not detected, running without overhead.')
+}
 
 export { bot, Redis }

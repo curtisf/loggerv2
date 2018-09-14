@@ -8,6 +8,7 @@ const Raven = require('raven')
 const SA = require('superagent')
 Raven.config(Config.raven.url).install()
 
+const argv = require('minimist')(process.argv.slice(2))
 let eventsObj = require('require-all')(path.join(__dirname, '/../events'))
 let events = ['all']
 Object.keys(eventsObj).map((event) => eventsObj[event]).map((event) => event.type).forEach((e) => {
@@ -27,7 +28,8 @@ let notablePermissions = [
   'manageMessages',
   'manageRoles',
   'manageEmojis',
-  'manageWebhooks'
+  'manageWebhooks',
+  'prioritySpeaker'
 ]
 
 Commands.ping = {
@@ -66,7 +68,7 @@ Commands.info = {
       },
       {
         'name': 'The Author',
-        'value': 'Logger is developed and maintained by [Piero#2048](https://github.com/caf203). You can contact him via my [home server](https://discord.gg/ed7Gaa3).'
+        'value': 'Logger is developed and maintained by [James Bond#0007](https://github.com/caf203). You can contact him via my [home server](https://discord.gg/ed7Gaa3).'
       }]
     }
     msg.channel.createMessage({embed: info}).catch(() => {})
@@ -116,6 +118,32 @@ Commands.eval = {
       } catch (e) {
         msg.channel.createMessage('```xl\n' + e + '\n```').catch(() => {})
       }
+    }
+  }
+}
+
+Commands.globaleval = {
+  name: 'globaleval',
+  desc: 'Eval across all shards.',
+  hidden: true,
+  func: function (msg, suffix, bot) {
+    if (checkCanUse(msg.author.id, 'eval')) {
+      process.send({
+        op: 'GLOBAL_EVAL',
+        c: suffix,
+        shardID: argv.shardid
+      })
+      let responseTimer = setTimeout(() => {
+        msg.channel.createMessage('There wasn\'t a response.')
+      }, 5000)
+     process.on('message', function listenForMessage (message) {
+        message = JSON.parse(message)
+        if (message.op === 'GLOBAL_EVAL_RESPONSE') {
+          msg.channel.createMessage(message.c)
+          process.removeListener('message', listenForMessage)
+          clearTimeout(responseTimer)
+        }
+      })
     }
   }
 }
@@ -526,7 +554,7 @@ Commands.lastnames = {
         } else {
           require('../handlers/read').getUserDocument(msg.mentions[0].id).then((doc) => {
             if (doc) {
-              msg.channel.createMessage(`<@${msg.author.id}>, Previous names: \`\`\`xl\n${doc.names ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``).catch(() => {})
+              msg.channel.createMessage(`<@${msg.author.id}>, Previous names: \`\`\`xl\n${doc.names.length !== 0 ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``).catch(() => {})
             } else {
               msg.channel.createMessage(`<@${msg.author.id}>, I have no stored names for **${msg.mentions[0].username}**!`).catch(() => {})
             }
@@ -777,7 +805,7 @@ Commands.userinfo = {
   desc: 'Get info from a member of the server.',
   func: function (msg, suffix, bot) {
     let fields = []
-    let user = msg.channel.guild.members.find(m => m.nick === suffix) || msg.channel.guild.members.find(m => m.username === suffix) || msg.channel.guild.members.filter(u => u.username.toLowerCase().startsWith(suffix))[0]
+    let user = msg.channel.guild.members.find(m => m.nick ? m.nick.includes(suffix) : m.username.includes(suffix)) || msg.channel.guild.members.filter(u => u.username.toLowerCase().startsWith(suffix))[0] || msg.channel.guild.members.find(m => m.id === suffix)
     if (msg.mentions.length !== 0) {
       user = msg.channel.guild.members.get(msg.mentions[0].id)
     }
@@ -996,107 +1024,6 @@ Commands.auditlogs = {
   }
 }
 
-Commands.livestats = {
-  name: 'livestats',
-  desc: 'I\'ll create a message and edit it when something happens with server info.',
-  func: function (msg, suffix, bot) {
-    let botPerms = msg.channel.guild.members.get(bot.user.id).permission.json
-    let loadToRedis = require('../handlers/read').loadToRedis
-    let updateGuildDocument = require('../handlers/update').updateGuildDocument
-    let userPerms = msg.member.permission.json
-    if (msg.channel.permissionsOf(bot.user.id).json.sendMessages) {
-      if (checkIfAllowed(msg)) {
-        if (botPerms.sendMessages) {
-          msg.channel.createMessage('Setting overview message.').then((m) => {
-            updateGuildDocument(msg.channel.guild.id, {'overviewID': `${m.channel.id}|${m.id}`}).then((res) => {
-              if (res === true) {
-                msg.channel.createMessage(`<@${msg.author.id}>, if you want to stop the overview from being updated, just delete the message.`).then((mes) => {
-                  setTimeout(() => {
-                    mes.delete().catch(() => {})
-                  }, 10000)
-                })
-                loadToRedis(msg.channel.guild.id)
-                let fields = [
-                  {
-                    'name': 'Member Count',
-                    'value': `► **${m.channel.guild.memberCount}** total\n► **${m.channel.guild.members.filter(m => !m.bot).length}** humans\n► **${m.channel.guild.members.filter(m => m.bot).length}** bots`
-                  },
-                  {
-                    'name': 'Channels',
-                    'value': `► **${m.channel.guild.channels.filter(c => c.type === 4).length}** categories/category\n► **${m.channel.guild.channels.filter(c => c.type === 0).length}** text channels\n► **${m.channel.guild.channels.filter(c => c.type === 2).length}** voice channels`
-                  },
-                  {
-                    'name': 'Role Count',
-                    'value': `► ${msg.channel.guild.roles.size}`
-                  }
-                ]
-                msg.channel.guild.getBans().then((b, banserror) => {
-                  msg.channel.guild.getAuditLogs(1, null, 22).then((log, auditerror) => {
-                    if (log.entries.length !== 0) {
-                      log = log.entries[0]
-                      let user = log.user
-                      bot.getRESTUser(log.targetID).then((affected) => {
-                        if (banserror || auditerror) {
-                          fields.push({
-                            'name': 'Ban Count',
-                            'value': '► Missing Permissions'
-                          })
-                        } else {
-                          fields.push({
-                            'name': 'Ban Count',
-                            'value': `► **Count**: ${b.length} | Last Ban: **${affected.username}#${affected.discriminator}** by **${user.username}#${user.discriminator}**${log.reason ? ` for *${log.reason}*` : ' with no reason specified.'}`
-                          })
-                        }
-                        editMessage()
-                      })
-                    } else {
-                      fields.push({
-                        'name': 'Ban Count',
-                        'value': 'None yet!'
-                      })
-                      editMessage()
-                    }
-                  })
-                })
-                function editMessage () {
-                  m.edit({ content: '**Live Stats**',
-                    embed: {
-                      'title': `${msg.channel.guild.name}`,
-                      'description': 'I will update with events that occur',
-                      'color': 7923697,
-                      'timestamp': new Date(m.timestamp),
-                      'footer': {
-                        'icon_url': bot.users.get(m.channel.guild.ownerID).avatarURL ? bot.users.get(m.channel.guild.ownerID).avatarURL : bot.users.get(m.channel.guild.ownerID).defaultAvatarURL,
-                        'text': `${bot.users.get(m.channel.guild.ownerID).username}#${bot.users.get(m.channel.guild.ownerID).discriminator}`
-                      },
-                      'thumbnail': {
-                        'url': m.channel.guild.iconURL ? m.channel.guild.iconURL : 'https://static1.squarespace.com/static/5937e362be659441f72e7c12/t/595120eadb29d60c5983e4a2/1498489067243/Sorry-image-not-available.png'
-                      },
-                      'fields': fields
-                    }})
-                }
-              } else {
-                m.edit('An error occured while setting the overview message, please try again later.')
-                log.error(`Error while setting overview for guild ${msg.channel.guild.name} (${msg.channel.guild.id}):`, res)
-              }
-            })
-          })
-        } else {
-          msg.author.getDMChannel().then((c) => {
-            c.createMessage(`I can't send messages to **${msg.channel.name}** (${msg.channel.guild.name})!`).catch(() => {})
-          })
-        }
-      } else {
-        msg.channel.createMessage('You lack the permissions needed to use **livestats**! Needed: **Administrator**, **Manage Server**, server ownership, or the `quartermaster` role.')
-      }
-    } else {
-      msg.author.getDMChannel().then((c) => {
-        c.createMessage(`I can't send messages to **${msg.channel.name}** (${msg.channel.guild.name})!`).catch(() => {})
-      })
-    }
-  }
-}
-
 Commands.logbots = {
   name: 'logbots',
   desc: 'Toggle whether I will log when bots delete/edit messages!',
@@ -1113,13 +1040,13 @@ Commands.logbots = {
               Commands['logbots'].func(msg, suffix, bot)
               loadToRedis(msg.channel.guild.id)
             } else {
-              msg.channel.createMessage('An error occurred while changing whether I log messages edited/deleted by bots, please try again later.')
+              msg.channel.createMessage('An error occurred while changing logbots value, please try again later.')
             }
           })
         } else {
           updateGuildDocument(msg.channel.guild.id, { 'logBots': !doc.logBots }).then((res) => {
             if (res === true) {
-              msg.channel.createMessage(`<@${msg.author.id}>, ${doc.logBots ? 'I will not log messages edited or deleted by bots anymore!' : 'I will now log messages edited or deleted by bots!'}`)
+              msg.channel.createMessage(`<@${msg.author.id}>, ${doc.logBots ? 'I will not log messages edited or deleted, or member role updates by bots anymore!' : 'I will now log messages edited or deleted, and member role updates by bots!'}`)
               loadToRedis(msg.channel.guild.id)
             } else {
               msg.channel.createMessage(`<@${msg.author.id}>, an error occurred while changing whether I log bots, please try again.`)
@@ -1164,6 +1091,37 @@ Commands.help = {
       for (let set in cmdList) {
         DMChannel.createMessage(cmdList[set].join('')).catch(() => {})
       }
+    })
+  }
+}
+
+Commands.clearmynames = {
+  name: 'clearmynames',
+  desc: 'Completely wipes your stored names from the database',
+  func: function (msg, suffix, bot) {
+    let updateUser = require('../handlers/update').updateUserDocument
+    msg.channel.createMessage('Are you **absolutely** sure? If so, please type `yes`. If not, this message will delete itself in 5 seconds.').then((cm) => {
+      let timeout = setTimeout(() => {
+        msg.channel.createMessage('I did not receive **yes** in time.').then((nm) => {
+          setTimeout(() => {
+            nm.delete()
+            cm.delete()
+          }, 5000)
+        })
+      }, 5000)
+      bot.on('messageCreate', function tempListener(m) {
+        if (m.author.id === msg.author.id && m.channel.id === msg.channel.id && m.content.toLowerCase() === 'yes') {
+          clearTimeout(timeout)
+          bot.removeListener('messageCreate', tempListener)
+          updateUser(msg.author.id, { names: [] }).then((resp) => {
+            if (resp) {
+              msg.channel.createMessage('Your saved names have been wiped!')
+            } else {
+              msg.channel.createMessage('It seems as if your user document doesn\'t exist yet, I have nothing on you!')
+            }
+          })
+        }
+      })
     })
   }
 }

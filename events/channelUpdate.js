@@ -116,7 +116,7 @@ module.exports = {
                 icon_url: `${user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`}`
               }
             }
-            sendToLog(bot, obj, null, null, changes)
+            sendToLog(this.name, bot, obj, null, null, changes)
           }
         }).catch(() => {
           sendToLog(this.name, bot, {

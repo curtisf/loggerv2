@@ -49,7 +49,7 @@ module.exports = {
           }
         })
         if (msg.attachments.length !== 0) {
-          sendToLog(module.exports.name, bot, {
+          let modlogEmbed = {
             guildID: msg.channel.guild.id,
             channelID: msg.channel.id,
             type: 'Message Deleted',
@@ -61,8 +61,16 @@ module.exports = {
               discriminator: `${msg.author.discriminator}`,
               avatar: `${msg.author.avatar}`
             },
-            simple: `A message with an attachment created by **${msg.author.username}#${msg.author.discriminator}** was deleted in ${msg.channel.name}.`
-          })
+            simple: `A message with an attachment created by **${msg.author.username}#${msg.author.discriminator}** was deleted in ${msg.channel.name}.`,
+          }
+          if (msg.attachments[0].base64) {
+            modlogEmbed.file = {
+              name: 'messagepicture.png',
+              file: Buffer.from(msg.attachments[0].base64, 'base64')
+            }
+            msg.attachments[0].base64 = null // save memory after a few days of caching images
+          }
+          sendToLog(module.exports.name, bot, modlogEmbed)
         } else if (msg.embeds.length !== 0) {
           sendToLog(module.exports.name, bot, {
             guildID: msg.channel.guild.id,

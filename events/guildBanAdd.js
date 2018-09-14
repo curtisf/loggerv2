@@ -26,7 +26,10 @@ module.exports = {
           color: 8351671,
           simple: `**${banned.username}#${banned.discriminator}** was banned by **${user.username}#${user.discriminator}**`,
           against: banned,
-          from: user
+          from: user,
+          image: {
+            url: 'https://imgur.com/wwx46q6'
+          }
         }
         sendToLog(this.name, bot, obj)
       }).catch(() => {

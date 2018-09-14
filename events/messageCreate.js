@@ -7,10 +7,22 @@ const Config = require('../botconfig.json')
 let Commands = require('../system/commands').Commands
 let commandObj = {}
 Object.keys(Commands).forEach((command) => commandObj[command] = 0)
+let base64Obj = {}
+
+setInterval(() => {
+  base64Obj = {}
+}, 14400000)
 
 module.exports = {
   toggleable: false,
   run: function (bot, msg) {
+    if (msg.attachments.length !== 0) {
+      superagent.get(msg.attachments[0].url).then((res) => {
+        base64Obj[msg.id] = res.body.toString('base64')
+        console.log(process.memoryUsage().heapUsed / 1024 / 1024)
+        msg.attachments[0].base64 = res.body.toString('base64')
+      })
+    }
     if (msg.author.bot || msg.author.id === bot.user.id) {
     // Ignore
     } else if (msg.channel.guild) {
