@@ -39,7 +39,8 @@ function createGuild (guild) {
       'joinlog': {
         'channelID': ''
       }
-    }
+    },
+    'prefix': '%'
   }).run().then((r) => {
     if (r.inserted) {
       let owner = bot.users.find(u => u.id === guild.ownerID)

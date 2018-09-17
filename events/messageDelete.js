@@ -53,7 +53,7 @@ module.exports = {
             guildID: msg.channel.guild.id,
             channelID: msg.channel.id,
             type: 'Message Deleted',
-            changed: `► Content: \`${msg.content ? msg.content.replace(/\"/g, '"').replace(/`/g, '') : 'None.'}\`\n► Channel: **${msg.channel.name}**\n► Message ID: ${msg.id}\n► [Attachment](https://cdn.discordapp.com/attachments/${msg.channel.id}/${msg.id}/${msg.attachments[0].filename}). <--- you might not be able to open this image.`, // eslint-disable-line
+            changed: `► Content: \`${msg.content ? msg.content.replace(/\"/g, '"').replace(/`/g, '') : 'None.'}\`\n► ID: ${msg.id}\n► Channel: **${channel.name}**`, // eslint-disable-line
             color: 8351671,
             against: {
               id: `${msg.author.id}`,

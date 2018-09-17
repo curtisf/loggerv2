@@ -78,7 +78,6 @@ if (Config.influx.use) {
         tags: { host: os.hostname() },
         fields: { count: commandObj[event] }
       })
-      commandObj[event] = 0
     })
     influx.writePoints(allToSend)
   }, 60000)

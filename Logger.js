@@ -5,6 +5,7 @@ import redis from 'redis'
 import * as request from 'superagent'
 import spawn from 'cross-spawn'
 import { getUserDocument, loadToRedis } from './handlers/read'
+const util = require('util')
 
 process.title = 'Logger v2.5'
 
@@ -50,7 +51,7 @@ bot.on('ready', () => {
   }
   bot.getSelf().then((user) => {
     postToDbots(bot.guilds.size)
-    log.info(`Hello Discord! I'm ${user.username}#${user.discriminator} (${user.id}), in ${bot.guilds.size} servers with ${bot.users.size} known members.`)
+    log.info(`Hello Discord! I'm ${argv.token ? `shard ${argv.shardid} ` : ''}${user.username}#${user.discriminator} (${user.id}), in ${bot.guilds.size} servers with ${bot.users.size} known members.`)
   })
   if (process.send) {
     process.send({
@@ -67,7 +68,8 @@ bot.on('disconnect', () => {
 })
 
 bot.on('error', (e) => {
-  log.error('Shard encountered an error!', e)
+  log.error(`Shard ${argv.token ? argv.shardid : 0} encountered an error!`, e)
+  Raven.captureException(e, {level: 'shardError'})
 })
 
 function init() {
@@ -307,11 +309,52 @@ if (process.send) {
     } else if (bot.ready) {
       switch (message.op) {
         case 'EVAL':
-          process.send(JSON.stringify({
-            op: 'EVAL_RESPONSE',
-            c: JSON.stringify(eval(message.c)),
-            shardID: argv.shardid
-          }))
+          try {
+            var returned = eval(message.c) // eslint-disable-line no-eval
+            var str = util.inspect(returned, {
+              depth: 1
+            })
+            if (str.length > 1900) {
+              str = str.substr(0, 1897)
+              str = str + '...'
+            }
+            str = str.replace(new RegExp(argv.token, 'gi'), '( ͡° ͜ʖ ͡°)') // thanks doug
+            if (returned !== undefined && returned !== null && typeof returned.then === 'function') {
+              returned.then(() => {
+                var str = util.inspect(returned, {
+                  depth: 1
+                })
+                if (str.length > 1900) {
+                  str = str.substr(0, 1897)
+                  str = str + '...'
+                }
+                process.send(JSON.stringify({
+                  op: 'EVAL_RESPONSE',
+                  c: JSON.stringify(str),
+                  shardID: argv.shardid
+                }))
+              }, (e) => {
+                var str = util.inspect(e, {
+                  depth: 1
+                })
+                if (str.length > 1900) {
+                  str = str.substr(0, 1897)
+                  str = str + '...'
+                }
+                process.send(JSON.stringify({
+                  op: 'EVAL_RESPONSE',
+                  c: JSON.stringify(str),
+                  shardID: argv.shardid
+                }))
+              })
+            }
+          } catch (e) {
+            process.send(JSON.stringify({
+              op: 'EVAL_RESPONSE',
+              c: JSON.stringify(e),
+              shardID: argv.shardid
+            }))
+          }
           break
         case 'GET_USER':
           process.send(JSON.stringify({
@@ -439,5 +482,13 @@ if (process.send) {
 } else {
   log.info('IPC shard manager not detected, running without overhead.')
 }
+
+process.on('unhandledRejection', (e) => {
+  Raven.captureException(e, {level: 'error'})
+})
+
+process.on('uncaughtException', (e) => {
+  Raven.captureException(e, {level: 'fatal'})
+})
 
 export { bot, Redis }
