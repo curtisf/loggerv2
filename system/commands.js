@@ -17,9 +17,10 @@ Object.keys(eventsObj).map((event) => eventsObj[event]).map((event) => event.typ
   }
 })
 let Commands = []
-let validFeeds = ['mod', 'voice', 'messages', 'server', 'joinlog']
+const validFeeds = ['mod', 'voice', 'messages', 'server', 'joinlog']
+const diagnosePerms = ['sendMessages', 'readMessages', 'embedLinks']
 
-let notablePermissions = [
+const notablePermissions = [
   'kickMembers',
   'banMembers',
   'administrator',
@@ -38,7 +39,7 @@ Commands.ping = {
   func: function (msg, suffix, bot) {
     msg.channel.createMessage('Pong!').then((m) => {
       m.edit(`Pong! Pseudo-ping: **${Math.floor(new Date(m.timestamp) - new Date(msg.timestamp))}** ms. Websocket latency: **${bot.shards.get(0).latency}** ms.`)
-    }).catch(() => {})
+    }).catch(() => { })
   }
 }
 
@@ -60,7 +61,7 @@ Commands.info = {
       },
       'fields': [{
         'name': 'General Information',
-        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **%setchannel** in the wanted channel or by using %help/the dashboard.`
+        'value': `Logger's task is to log actions from users to a specified channel. This is accomplished by using **%setchannel** in the wanted channel or by using %help/the [dashboard](https://whatezlife.com).`
       },
       {
         'name': 'Technical Details',
@@ -69,9 +70,13 @@ Commands.info = {
       {
         'name': 'The Author',
         'value': 'Logger is developed and maintained by [James Bond#0007](https://github.com/caf203). You can contact him via my [home server](https://discord.gg/ed7Gaa3).'
+      },
+      {
+        'name': 'Support Me',
+        'value': 'Do you like Logger? Do you want access to the (planned) patreon version of Logger that has prefix customization, attachment logging, and persistent message logging? Check me out on [Patreon!](https://patreon.com/logger)'
       }]
     }
-    msg.channel.createMessage({embed: info}).catch(() => {})
+    msg.channel.createMessage({ embed: info }).catch(() => { })
   }
 }
 
@@ -114,9 +119,9 @@ Commands.eval = {
               ms.edit('```xl\n' + str + '\n```')
             })
           }
-        }).catch(() => {})
+        }).catch(() => { })
       } catch (e) {
-        msg.channel.createMessage('```xl\n' + e + '\n```').catch(() => {})
+        msg.channel.createMessage('```xl\n' + e + '\n```').catch(() => { })
       }
     }
   }
@@ -136,7 +141,7 @@ Commands.globaleval = {
       let responseTimer = setTimeout(() => {
         msg.channel.createMessage('There wasn\'t a response.')
       }, 5000)
-     process.on('message', function listenForMessage (message) {
+      process.on('message', function listenForMessage(message) {
         message = JSON.parse(message)
         if (message.op === 'GLOBAL_EVAL_RESPONSE') {
           msg.channel.createMessage(message.c)
@@ -164,7 +169,7 @@ Commands.setchannel = {
           let ch
           try {
             ch = bot.getChannel(splitSuffix[0])
-          } catch (_) {}
+          } catch (_) { }
           if (splitSuffix.length === 2) {
             if (ch && validFeeds.includes(splitSuffix[1])) {
               getGuildDocument(msg.channel.guild.id).then((doc) => {
@@ -192,11 +197,11 @@ Commands.setchannel = {
                       }
                     })
                   }
-                  msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log to **${ch.name}**! Reason: ${reason}.`}})
+                  msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log to **${ch.name}**! Reason: ${reason}.` } })
                 }
               })
             } else {
-              msg.channel.createMessage({ embed: { color: 16711680, description: `Incorrect usage. Read %help and try again.`}})
+              msg.channel.createMessage({ embed: { color: 16711680, description: `Incorrect usage. Read %help and try again.` } })
             }
           } else if (msg.channel.guild.channels.filter(c => c.type === 0).map(c => c.id).includes(splitSuffix[0]) && splitSuffix.length === 1) {
             getGuildDocument(msg.channel.guild.id).then((doc) => {
@@ -205,11 +210,11 @@ Commands.setchannel = {
                   'logchannel': ch.id
                 }).then((r) => {
                   if (r === true) {
-                    msg.channel.createMessage(`<@${msg.author.id}>, I will now log **all** actions to **${ch.name}**! Use \`%help\` to see how you can set separate channels for certain events (joins, bans, etc)`).catch(() => {})
-                    ch.createMessage(`I was told to log here by **${msg.member.nick ? msg.member.nick : msg.author.username}#${msg.author.discriminator}**. I ignore anything that happens in this channel (message edit, delete).`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, I will now log **all** actions to **${ch.name}**! Use \`%help\` to see how you can set separate channels for certain events (joins, bans, etc)`).catch(() => { })
+                    ch.createMessage(`I was told to log here by **${msg.member.nick ? msg.member.nick : msg.author.username}#${msg.author.discriminator}**. I ignore anything that happens in this channel (message edit, delete).`).catch(() => { })
                     loadToRedis(msg.channel.guild.id)
                   } else {
-                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => { })
                     log.error(`Error while setting channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
                     log.error(r)
                   }
@@ -226,7 +231,7 @@ Commands.setchannel = {
                     }
                   })
                 }
-                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log to **${ch.name}**! Reason: ${reason}.`}})
+                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log to **${ch.name}**! Reason: ${reason}.` } })
               }
             })
           } else if (validFeeds.includes(splitSuffix[0]) && splitSuffix.length === 1) {
@@ -235,10 +240,10 @@ Commands.setchannel = {
                 doc.feeds[splitSuffix[0]].channelID = msg.channel.id
                 updateGuildDocument(msg.channel.guild.id, { 'feeds': doc.feeds }).then((r) => {
                   if (r === true) {
-                    msg.channel.createMessage(`<@${msg.author.id}>, I will now log **${splitSuffix[0]}** related actions to **${msg.channel.name}**!`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, I will now log **${splitSuffix[0]}** related actions to **${msg.channel.name}**!`).catch(() => { })
                     loadToRedis(msg.channel.guild.id)
                   } else {
-                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while setting the log channel, please try again.`).catch(() => { })
                     log.error(`Error while setting channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
                     log.error(r)
                   }
@@ -255,11 +260,11 @@ Commands.setchannel = {
                     }
                   })
                 }
-                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log here! Reason: ${reason}.`}})
+                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log here! Reason: ${reason}.` } })
               }
             })
           } else {
-            msg.channel.createMessage({ embed: { color: 16711680, description: `Incorrect usage. Read %help and try again.`}})
+            msg.channel.createMessage({ embed: { color: 16711680, description: `Incorrect usage. Read %help and try again.` } })
           }
         } else {
           getGuildDocument(msg.channel.guild.id).then((doc) => {
@@ -288,7 +293,7 @@ Commands.setchannel = {
                 if (!reason) {
                   reason = `I'm already logging to other channels! Use \`%clearchannel\` in them to stop logging. This restriction exists so that the bot doesn't get ratelimited`
                 }
-                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log here! Reason: ${reason}.`}})
+                msg.channel.createMessage({ embed: { color: 16711680, description: `<@${msg.author.id}>, I can't log here! Reason: ${reason}.` } })
               }
             }
           })
@@ -299,7 +304,7 @@ Commands.setchannel = {
     } else {
       msg.author.getDMChannel().then((DMChannel) => {
         DMChannel.createMessage(`I can't send messages to **${msg.channel.name}**!`)
-      }).catch(() => {})
+      }).catch(() => { })
     }
   }
 }
@@ -338,7 +343,7 @@ Commands.clearchannel = {
             if (r === true) {
               loadToRedis(msg.channel.guild.id)
             } else {
-              msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing all channels logged to, please try again.`).catch(() => {})
+              msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing all channels logged to, please try again.`).catch(() => { })
               log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id})`)
               log.error(r)
             }
@@ -350,7 +355,7 @@ Commands.clearchannel = {
                 if (r === true) {
                   loadToRedis(msg.channel.guild.id)
                 } else {
-                  msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => {})
+                  msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => { })
                   log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
                   log.error(r)
                 }
@@ -365,7 +370,7 @@ Commands.clearchannel = {
             if (r === true) {
               loadToRedis(msg.channel.guild.id)
             } else {
-              msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => {})
+              msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while clearing the log channel, please try again.`).catch(() => { })
               log.error(`Error while clearing channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
               log.error(r)
             }
@@ -383,7 +388,7 @@ Commands.clearchannel = {
                   if (r === true) {
                     loadToRedis(msg.channel.guild.id)
                   } else {
-                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while trying to stop logging here, please try again.`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, An error has occurred while trying to stop logging here, please try again.`).catch(() => { })
                     log.error(`Error while clearing logged to channel for guild ${msg.channel.guild.name} (${msg.channel.guild.id}).`)
                     log.error(r)
                   }
@@ -395,7 +400,7 @@ Commands.clearchannel = {
         }
       })
     } else {
-      msg.channel.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server** or **Administrator**`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server** or **Administrator**`).catch(() => { })
     }
   }
 }
@@ -412,10 +417,10 @@ Commands.recache = {
           loadToRedis(suffix)
           msg.addReaction('👌')
         } catch (e) {
-          msg.channel.createMessage('Failed').catch(() => {})
+          msg.channel.createMessage('Failed').catch(() => { })
           msg.author.getDMChannel().then((c) => {
             c.createMessage(JSON.stringify(e))
-          }).catch(() => {})
+          }).catch(() => { })
         }
       } else {
         msg.addReaction('❌')
@@ -441,10 +446,10 @@ Commands.ignorechannel = {
               'ignoredChannels': res.ignoredChannels
             }).then((resp) => {
               if (resp === true) {
-                msg.channel.createMessage(`<@${msg.author.id}>, I will resume logging events in **${msg.channel.name}**!`).catch(() => {})
+                msg.channel.createMessage(`<@${msg.author.id}>, I will resume logging events in **${msg.channel.name}**!`).catch(() => { })
                 loadToRedis(msg.channel.guild.id)
               } else {
-                msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to resume logging to **${msg.channel.name}**, please try again.`).catch(() => {})
+                msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to resume logging to **${msg.channel.name}**, please try again.`).catch(() => { })
                 log.error(`Error while removing ${msg.channel.id} from the ignored channel array, guild ID ${msg.channel.guild.id}.`)
                 log.error(resp)
               }
@@ -455,10 +460,10 @@ Commands.ignorechannel = {
               'ignoredChannels': res.ignoredChannels
             }).then((resp) => {
               if (resp === true) {
-                msg.channel.createMessage(`<@${msg.author.id}>, I will not log events in **${msg.channel.name}** anymore!`).catch(() => {})
+                msg.channel.createMessage(`<@${msg.author.id}>, I will not log events in **${msg.channel.name}** anymore!`).catch(() => { })
                 loadToRedis(msg.channel.guild.id)
               } else {
-                msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to ignore **${msg.channel.name}**, please try again.`).catch(() => {})
+                msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to ignore **${msg.channel.name}**, please try again.`).catch(() => { })
                 log.error(`Error while adding ${msg.channel.id} from the ignored channel array, guild ID ${msg.channel.guild.id}.`)
                 log.error(resp)
               }
@@ -467,7 +472,7 @@ Commands.ignorechannel = {
         } // silently recover guild document
       })
     } else {
-      msg.channel.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server** or **Administrator**`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, You can't use this command! Required: **Manage Server** or **Administrator**`).catch(() => { })
     }
   }
 }
@@ -485,12 +490,12 @@ Commands.togglemodule = {
         if (suffix === 'all') {
           getGuildDocument(msg.channel.guild.id).then((res) => {
             if (res) {
-              updateGuildDocument(msg.channel.guild.id, {'disabledEvents': []}).then((resp) => {
+              updateGuildDocument(msg.channel.guild.id, { 'disabledEvents': [] }).then((resp) => {
                 if (resp === true) {
-                  msg.channel.createMessage(`<@${msg.author.id}>, **all modules enabled.**`).catch(() => {})
+                  msg.channel.createMessage(`<@${msg.author.id}>, **all modules enabled.**`).catch(() => { })
                   loadToRedis(msg.channel.guild.id)
                 } else {
-                  msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to enable all modules, please try again.`).catch(() => {})
+                  msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to enable all modules, please try again.`).catch(() => { })
                   log.error(`Error while enabling module ${suffix}, guild ID ${msg.channel.guild.id}.`)
                   log.error(resp)
                 }
@@ -506,10 +511,10 @@ Commands.togglemodule = {
                   'disabledEvents': res.disabledEvents
                 }).then((resp) => {
                   if (resp === true) {
-                    msg.channel.createMessage(`<@${msg.author.id}>, Module **${suffix}** has been enabled.`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, Module **${suffix}** has been enabled.`).catch(() => { })
                     loadToRedis(msg.channel.guild.id)
                   } else {
-                    msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to enable module **${suffix}**, please try again.`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to enable module **${suffix}**, please try again.`).catch(() => { })
                     log.error(`Error while enabling module ${suffix}, guild ID ${msg.channel.guild.id}.`)
                     log.error(resp)
                   }
@@ -520,10 +525,10 @@ Commands.togglemodule = {
                   'disabledEvents': res.disabledEvents
                 }).then((resp) => {
                   if (resp === true) {
-                    msg.channel.createMessage(`<@${msg.author.id}>, Module **${suffix}** has been disabled.`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, Module **${suffix}** has been disabled.`).catch(() => { })
                     loadToRedis(msg.channel.guild.id)
                   } else {
-                    msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to disable module **${suffix}**, please try again.`).catch(() => {})
+                    msg.channel.createMessage(`<@${msg.author.id}>, Something went wrong while trying to disable module **${suffix}**, please try again.`).catch(() => { })
                     log.error(`Error while disabling module ${suffix}, guild ID ${msg.channel.guild.id}.`)
                     log.error(resp)
                   }
@@ -532,13 +537,13 @@ Commands.togglemodule = {
             } // silently recover guild document
           })
         } else {
-          msg.channel.createMessage('Invalid module, casing is important! Try using %help').catch(() => {})
+          msg.channel.createMessage('Invalid module, casing is important! Try using %help').catch(() => { })
         }
       } else {
-        msg.channel.createMessage('You didn\'t provide a module name! Try using %help.').catch(() => {})
+        msg.channel.createMessage('You didn\'t provide a module name! Try using %help.').catch(() => { })
       }
     } else {
-      msg.channel.createMessage(`You can't use this command! Required: **Manage Server** or **Administrator**`).catch(() => {})
+      msg.channel.createMessage(`You can't use this command! Required: **Manage Server** or **Administrator**`).catch(() => { })
     }
   }
 }
@@ -550,13 +555,13 @@ Commands.lastnames = {
     if (suffix) {
       if (msg.mentions.length !== 0) {
         if (msg.mentions.length > 1) {
-          msg.channel.createMessage(`<@${msg.author.id}>, One at a time, please!`).catch(() => {})
+          msg.channel.createMessage(`<@${msg.author.id}>, One at a time, please!`).catch(() => { })
         } else {
           require('../handlers/read').getUserDocument(msg.mentions[0].id).then((doc) => {
             if (doc) {
-              msg.channel.createMessage(`<@${msg.author.id}>, Previous names: \`\`\`xl\n${doc.names.length !== 0 ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``).catch(() => {})
+              msg.channel.createMessage(`<@${msg.author.id}>, Previous names: \`\`\`xl\n${doc.names.length !== 0 ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``).catch(() => { })
             } else {
-              msg.channel.createMessage(`<@${msg.author.id}>, I have no stored names for **${msg.mentions[0].username}**!`).catch(() => {})
+              msg.channel.createMessage(`<@${msg.author.id}>, I have no stored names for **${msg.mentions[0].username}**!`).catch(() => { })
             }
           })
         }
@@ -566,15 +571,23 @@ Commands.lastnames = {
         if (member) {
           require('../handlers/read').getUserDocument(member.id).then((doc) => {
             if (doc) {
-              msg.channel.createMessage(`<@${msg.author.id}>, Previous names: \`\`\`xl\n${doc.names ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``).catch(() => {})
+              msg.channel.createMessage(`<@${msg.author.id}>, Previous names: \`\`\`xl\n${doc.names ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``).catch(() => { })
             } else {
-              msg.channel.createMessage(`<@${msg.author.id}>, I have no stored names for **${member.username}**!`).catch(() => {})
+              msg.channel.createMessage(`<@${msg.author.id}>, I have no stored names for **${member.username}**!`).catch(() => { })
             }
           })
         } else {
-          msg.channel.createMessage(`<@${msg.author.id}>, The specified ID isn't a member of this server!`).catch(() => {})
+          msg.channel.createMessage(`<@${msg.author.id}>, The specified ID isn't a member of this server!`).catch(() => { })
         }
       }
+    } else {
+      require('../handlers/read').getUserDocument(msg.author.id).then((doc) => {
+        if (doc) {
+          msg.channel.createMessage(`<@${msg.author.id}>, Previous names: \`\`\`xl\n${doc.names ? doc.names.filter((name, pos) => doc.names.indexOf(name) === pos).join(', ') : 'None'}\`\`\``).catch(() => { })
+        } else {
+          msg.channel.createMessage(`<@${msg.author.id}>, I have no stored names for **${member.username}**!`).catch(() => { })
+        }
+      })
     }
   }
 }
@@ -586,15 +599,15 @@ Commands.archive = {
     let request = require('superagent')
     let splitSuffix = suffix.split(' ')
     if (!msg.channel.guild.members.get(msg.author.id).permission.json.readMessageHistory || !msg.channel.guild.members.get(msg.author.id).permission.json.manageMessages) {
-      msg.channel.createMessage(`<@${msg.author.id}>, You need **Read Message History**, **Manage Messages**, or the \`quartermaster\` role to use archive!`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, You need **Read Message History**, **Manage Messages**, or the \`quartermaster\` role to use archive!`).catch(() => { })
     } else if (!msg.channel.guild.members.get(bot.user.id).permission.json.readMessageHistory) {
-      msg.channel.createMessage(`<@${msg.author.id}>, I need the **Read Message History** permission to archive messages!`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, I need the **Read Message History** permission to archive messages!`).catch(() => { })
     } else if (!suffix) {
-      msg.channel.createMessage(`<@${msg.author.id}>, You need to provide a number of messages to archive! (1-600)`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, You need to provide a number of messages to archive! (1-600)`).catch(() => { })
     } else if (isNaN(splitSuffix[0])) {
-      msg.channel.createMessage(`<@${msg.author.id}>, You need to provide a number of messages to archive! (1-600)`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, You need to provide a number of messages to archive! (1-600)`).catch(() => { })
     } else if (splitSuffix[0] < 1 || splitSuffix[0] > 1000) {
-      msg.channel.createMessage(`<@${msg.author.id}>, Invalid number of messages provided, you can use any from 1-600`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, Invalid number of messages provided, you can use any from 1-600`).catch(() => { })
     } else if (checkIfAllowed(msg)) {
       if (msg.mentions.length === 1) {
         fetch(parseInt(splitSuffix[0]), msg.mentions[0].id)
@@ -606,7 +619,7 @@ Commands.archive = {
     }
     let messageArray = []
 
-    function fetch (amount, authorID) {
+    function fetch(amount, authorID) {
       msg.channel.getMessages(amount).then((messageArray) => {
         let messagesString
         if (authorID) {
@@ -615,22 +628,22 @@ Commands.archive = {
           messagesString = messageArray.reverse().map(m => `${m.author.username}#${m.author.discriminator} (${m.author.id}) | ${new Date(m.timestamp)}: ${m.content ? m.content : 'No Message Content'}${m.embeds.length !== 0 ? ' ======> Contains Embed' : ''}${m.attachments.length !== 0 ? ` =====> Attachment: ${m.attachments[0].filename}:${m.attachments[0].url}` : ''}`).join('\r\n')
         }
         request
-      .post(`https://paste.lemonmc.com/api/json/create`)
-      .send({
-        data: messagesString,
-        language: 'text',
-        private: true,
-        title: `${msg.channel.name.substr(0, 20)}`,
-        expire: '2592000'
-      })
-      .end((err, res) => {
-        if (!err && res.statusCode === 200 && res.body.result.id) {
-          msg.channel.createMessage(`<@${msg.author.id}>, **${messageArray.length}** message(s) could be archived. Link: https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash}`).catch(() => {})
-        } else {
-          log.error(res.body)
-          msg.channel.createMessage(`<@${msg.author.id}>, An error occurred while uploading your archived messages, please contact the bot author!`).catch(() => {})
-        }
-      })
+          .post(`https://paste.lemonmc.com/api/json/create`)
+          .send({
+            data: messagesString,
+            language: 'text',
+            private: true,
+            title: `${msg.channel.name.substr(0, 20)}`,
+            expire: '2592000'
+          })
+          .end((err, res) => {
+            if (!err && res.statusCode === 200 && res.body.result.id) {
+              msg.channel.createMessage(`<@${msg.author.id}>, **${messageArray.length}** message(s) could be archived. Link: https://paste.lemonmc.com/${res.body.result.id}/${res.body.result.hash}`).catch(() => { })
+            } else {
+              log.error(res.body)
+              msg.channel.createMessage(`<@${msg.author.id}>, An error occurred while uploading your archived messages, please contact the bot author!`).catch(() => { })
+            }
+          })
       })
     }
   }
@@ -642,10 +655,10 @@ Commands.invite = {
   func: function (msg, suffix, bot) {
     msg.channel.createMessage({
       embed: {
-        description: `<@${msg.author.id}>, Invite me using [this](https://discordapp.com/oauth2/authorize?client_id=298822483060981760&scope=bot&permissions=380065)`,
+        description: `<@${msg.author.id}>, Invite me using [this](https://discordapp.com/oauth2/authorize?client_id=298822483060981760&scope=bot&permissions=380065). Configure me using [the dashboard](https://whatezlife.com)`,
         color: 8351671
       }
-    }).catch(() => {})
+    }).catch(() => { })
   }
 }
 
@@ -660,67 +673,76 @@ Commands.get = {
       let channel = guild ? undefined : bot.getChannel(suffix)
       let fields = []
       if (user) {
-        let owned = bot.guilds.filter(g => g.ownerID === user.id).map(g => `**${g.name}**: ${g.id}`)
+        let owned = bot.guilds.filter(g => g.ownerID === user.id).map(g => `**${g.name}** (${g.id}): ${g.memberCount}`)
+        let sharedServers = bot.guilds.filter(g => g.members.get(user.id)).map(g => `**${g.name}** (${g.id}): ${g.memberCount}`)
         if (owned.length !== 0) {
           owned = owned.join('\n')
         } else {
           owned = 'None'
         }
+        if (sharedServers.length !== 0) {
+          sharedServers = sharedServers.join('\n')
+        } else {
+          sharedServers = 'None'
+        }
         fields.push({
           name: 'Name',
           value: `Known as: **${user.username}#${user.discriminator}**\nID: **${user.id}**\n<@${user.id}>`
         }, {
-          name: 'Creation',
-          value: `**${new Date(user.createdAt).toString().substr(0, 21)}**`
-        }, {
-          name: 'Avatar',
-          value: `**[Click Me](${user.avatar ? user.avatarURL : user.defaultAvatarURL})**`
-        }, {
-          name: 'Owned Servers',
-          value: `${owned}`
-        })
+            name: 'Creation',
+            value: `**${new Date(user.createdAt).toString().substr(0, 21)}**`
+          }, {
+            name: 'Avatar',
+            value: `**[Click Me](${user.avatar ? user.avatarURL : user.defaultAvatarURL})**`
+          }, {
+            name: 'Owned Servers',
+            value: owned
+          }, {
+            name: 'Shared Servers',
+            value: sharedServers
+          })
         execute()
       } else if (channel) {
         fields.push({
           name: 'Name',
           value: `**${channel.name}** (**${channel.id}**)`
         }, {
-          name: 'Position',
-          value: `${channel.position}`
-        }, {
-          name: 'In Category',
-          value: `**${channel.parentID ? 'Yes' : 'No'}**`
-        }, {
-          name: 'Part Of',
-          value: `**${channel.guild.name}** (${channel.guild.id})`
-        })
+            name: 'Position',
+            value: `${channel.position}`
+          }, {
+            name: 'In Category',
+            value: `**${channel.parentID ? 'Yes' : 'No'}**`
+          }, {
+            name: 'Part Of',
+            value: `**${channel.guild.name}** (${channel.guild.id})`
+          })
         execute()
       } else if (guild) {
         fields.push({
           name: 'Name',
           value: `**${guild.name}** (${guild.id})`
         }, {
-          name: 'Verification Level',
-          value: `${guild.verificationLevel}`
-        }, {
-          name: 'Owner',
-          value: `**${bot.users.get(guild.ownerID).username}#${bot.users.get(guild.ownerID).discriminator}** (${guild.ownerID})`
-        }, {
-          name: 'Member Count',
-          value: `**${guild.memberCount}**\n**${guild.members.filter(u => u.bot).length}** bots\n**${guild.members.filter(u => !u.bot).length}** users`
-        }, {
-          name: 'Partnership',
-          value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${guild.features.map(feature => `\`${feature}\``).join(', ')}`}`
-        }, {
-          name: 'Channels',
-          value: `**${guild.channels.size}** total\n**${guild.channels.filter(c => c.type === 0).length}** text\n**${guild.channels.filter(c => c.type === 2).length}** voice\n**${guild.channels.filter(c => c.type === 4).length}** categories`
-        }, {
-          name: 'Region',
-          value: `**${guild.region}**`
-        }, {
-          name: 'Role Count',
-          value: `${guild.roles.size}`
-        })
+            name: 'Verification Level',
+            value: `${guild.verificationLevel}`
+          }, {
+            name: 'Owner',
+            value: `**${bot.users.get(guild.ownerID).username}#${bot.users.get(guild.ownerID).discriminator}** (${guild.ownerID})`
+          }, {
+            name: 'Member Count',
+            value: `**${guild.memberCount}**\n**${guild.members.filter(u => u.bot).length}** bots\n**${guild.members.filter(u => !u.bot).length}** users`
+          }, {
+            name: 'Partnership',
+            value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${guild.features.map(feature => `\`${feature}\``).join(', ')}`}`
+          }, {
+            name: 'Channels',
+            value: `**${guild.channels.size}** total\n**${guild.channels.filter(c => c.type === 0).length}** text\n**${guild.channels.filter(c => c.type === 2).length}** voice\n**${guild.channels.filter(c => c.type === 4).length}** categories`
+          }, {
+            name: 'Region',
+            value: `**${guild.region}**`
+          }, {
+            name: 'Role Count',
+            value: `${guild.roles.size}`
+          })
         let emojis = {
           0: []
         }
@@ -744,12 +766,12 @@ Commands.get = {
             name: 'Log Channel',
             value: `${doc.logchannel ? `**${bot.getChannel(doc.logchannel).name}** (${doc.logchannel})` : 'None'}`
           }, {
-            name: 'Disabled Events',
-            value: `${doc.disabledEvents.length !== 0 ? `\`\`\`${doc.disabledEvents.join(', ')}\`\`\`` : 'All are enabled'}`
-          }, {
-            name: 'Ignored Channels',
-            value: `${doc.ignoredChannels.length !== 0 ? `\`\`\`${doc.ignoredChannels.map(c => bot.getChannel(c).name).join(', ')}\`\`\`` : 'None'}`
-          })
+              name: 'Disabled Events',
+              value: `${doc.disabledEvents.length !== 0 ? `\`\`\`${doc.disabledEvents.join(', ')}\`\`\`` : 'All are enabled'}`
+            }, {
+              name: 'Ignored Channels',
+              value: `${doc.ignoredChannels.length !== 0 ? `\`\`\`${doc.ignoredChannels.map(c => bot.getChannel(c).name).join(', ')}\`\`\`` : 'None'}`
+            })
           Object.keys(doc.feeds).forEach((feed) => {
             if (doc.feeds[feed].channelID) {
               fields.push({
@@ -763,7 +785,7 @@ Commands.get = {
       } else {
         execute()
       }
-      function execute () { // eslint-disable-line
+      function execute() { // eslint-disable-line
         if (user || channel || guild) {
           msg.channel.createMessage({
             embed: {
@@ -771,7 +793,7 @@ Commands.get = {
               color: 5231792,
               fields: fields
             }
-          }).catch(() => {})
+          }).catch(() => { })
         } else {
           msg.channel.createMessage({
             embed: {
@@ -782,7 +804,7 @@ Commands.get = {
                 value: 'No user, channel, or guild found!'
               }]
             }
-          }).catch(() => {})
+          }).catch(() => { })
         }
       }
     } else {
@@ -795,7 +817,7 @@ Commands.get = {
             value: 'You can\'t use this command!'
           }]
         }
-      }).catch(() => {})
+      }).catch(() => { })
     }
   }
 }
@@ -834,31 +856,35 @@ Commands.userinfo = {
         name: 'Name',
         value: `**${user.username}#${user.discriminator}** ${user.nick ? `(**${user.nick}**)` : ''} (${user.id})\n${user.avatar.startsWith('a_') ? 'Has Nitro or Partner' : 'Regular User'}`
       }, {
-        name: 'Join Date',
-        value: `**${new Date(user.joinedAt)}**`
-      }, {
-        name: 'Creation Date',
-        value: `**${new Date(user.createdAt).toString().substr(0, 21)}**`
-      }, {
-        name: 'Roles',
-        value: `${user.roles.length !== 0 ? user.roles.map(r => `\`${msg.channel.guild.roles.get(r).name}\``).join(', ') : 'None'}`
-      }, {
-        name: 'Notable Permissions',
-        value: `\`${perms.join(', ')}\``
-      })
-      msg.channel.createMessage({embed: {
-        timestamp: new Date(msg.timestamp),
-        color: color,
-        thumbnail: {
-          url: user.avatar ? user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`
-        },
-        fields: fields
-      }}).catch(() => {})
+          name: 'Join Date',
+          value: `**${new Date(user.joinedAt)}**`
+        }, {
+          name: 'Creation Date',
+          value: `**${new Date(user.createdAt).toString().substr(0, 21)}**`
+        }, {
+          name: 'Roles',
+          value: `${user.roles.length !== 0 ? user.roles.map(r => `\`${msg.channel.guild.roles.get(r).name}\``).join(', ') : 'None'}`
+        }, {
+          name: 'Notable Permissions',
+          value: `\`${perms.join(', ')}\``
+        })
+      msg.channel.createMessage({
+        embed: {
+          timestamp: new Date(msg.timestamp),
+          color: color,
+          thumbnail: {
+            url: user.avatar ? user.avatarURL : `https://cdn.discordapp.com/embed/avatars/${user.discriminator % 5}.png`
+          },
+          fields: fields
+        }
+      }).catch(() => { })
     } else {
-      msg.channel.createMessage({embed: {
-        color: 16396122,
-        description: '**The specified user isn\'t a member of the server**'
-      }}).catch(() => {})
+      msg.channel.createMessage({
+        embed: {
+          color: 16396122,
+          description: '**The specified user isn\'t a member of the server**'
+        }
+      }).catch(() => { })
     }
   }
 }
@@ -873,27 +899,27 @@ Commands.serverinfo = {
       name: 'Name',
       value: `**${guild.name}** (${guild.id})`
     }, {
-      name: 'Verification Level',
-      value: `${guild.verificationLevel}`
-    }, {
-      name: 'Owner',
-      value: `**${bot.users.get(guild.ownerID).username}#${bot.users.get(guild.ownerID).discriminator}** (${guild.ownerID})`
-    }, {
-      name: 'Member Count',
-      value: `**${guild.memberCount}**\n**${guild.members.filter(u => u.bot).length}** bots\n**${guild.members.filter(u => !u.bot).length}** users`
-    }, {
-      name: 'Partnership',
-      value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${guild.features.map(feature => `\`${feature}\``).join(', ')}`}`
-    }, {
-      name: 'Channels',
-      value: `**${guild.channels.size}** total\n**${guild.channels.filter(c => c.type === 0).length}** text\n**${guild.channels.filter(c => c.type === 2).length}** voice\n**${guild.channels.filter(c => c.type === 4).length}** categories`
-    }, {
-      name: 'Region',
-      value: `**${guild.region}**`
-    }, {
-      name: 'Role Count',
-      value: `${guild.roles.size}`
-    })
+        name: 'Verification Level',
+        value: `${guild.verificationLevel}`
+      }, {
+        name: 'Owner',
+        value: `**${bot.users.get(guild.ownerID).username}#${bot.users.get(guild.ownerID).discriminator}** (${guild.ownerID})`
+      }, {
+        name: 'Member Count',
+        value: `**${guild.memberCount}**\n**${guild.members.filter(u => u.bot).length}** bots\n**${guild.members.filter(u => !u.bot).length}** users`
+      }, {
+        name: 'Partnership',
+        value: `${guild.features.length === 0 ? 'No' : `Yes, features: ${guild.features.map(feature => `\`${feature}\``).join(', ')}`}`
+      }, {
+        name: 'Channels',
+        value: `**${guild.channels.size}** total\n**${guild.channels.filter(c => c.type === 0).length}** text\n**${guild.channels.filter(c => c.type === 2).length}** voice\n**${guild.channels.filter(c => c.type === 4).length}** categories`
+      }, {
+        name: 'Region',
+        value: `**${guild.region}**`
+      }, {
+        name: 'Role Count',
+        value: `${guild.roles.size}`
+      })
     let emojis = {
       0: []
     }
@@ -938,15 +964,17 @@ Commands.serverinfo = {
       send()
     })
 
-    function send () {
-      msg.channel.createMessage({embed: {
-        timestamp: new Date(msg.timestamp),
-        color: 3191403,
-        thumbnail: {
-          url: guild.iconURL ? guild.iconURL : `http://www.kalahandi.info/wp-content/uploads/2016/05/sorry-image-not-available.png`
-        },
-        fields: fields
-      }}).catch(() => {})
+    function send() {
+      msg.channel.createMessage({
+        embed: {
+          timestamp: new Date(msg.timestamp),
+          color: 3191403,
+          thumbnail: {
+            url: guild.iconURL ? guild.iconURL : `http://www.kalahandi.info/wp-content/uploads/2016/05/sorry-image-not-available.png`
+          },
+          fields: fields
+        }
+      }).catch(() => { })
     }
   }
 }
@@ -956,15 +984,15 @@ Commands.auditlogs = {
   desc: 'Get the last x audit logs (up to 25)',
   func: function (msg, suffix, bot) {
     if (!msg.member.permission.json['viewAuditLogs'] && !checkIfAllowed(msg)) {
-      msg.channel.createMessage(`<@${msg.author.id}>, you can't view audit logs or don't have the \`quartermaster\` role`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't view audit logs or don't have the \`quartermaster\` role`).catch(() => { })
     } else if (!msg.channel.guild.members.get(bot.user.id).permission.json['viewAuditLogs']) {
-      msg.channel.createMessage(`<@${msg.author.id}>, I can't view audit logs!`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, I can't view audit logs!`).catch(() => { })
     } else if (isNaN(suffix)) {
-      msg.channel.createMessage(`<@${msg.author.id}>, please provide a number between 1 and 75 to fetch.`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, please provide a number between 1 and 75 to fetch.`).catch(() => { })
     } else if (suffix > 75) {
-      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch more than 75 audit logs at once.`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch more than 75 audit logs at once.`).catch(() => { })
     } else if (suffix < 1) {
-      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch less than 1 audit log.`).catch(() => {})
+      msg.channel.createMessage(`<@${msg.author.id}>, you can't fetch less than 1 audit log.`).catch(() => { })
     } else {
       msg.channel.guild.getAuditLogs(suffix).then((logs) => {
         let what
@@ -1005,21 +1033,97 @@ Commands.auditlogs = {
         })
         Object.keys(fieldsArrs).forEach((num) => {
           if (num === 0) {
-            msg.channel.createMessage({content: `__Showing last **${suffix}** logs.__`,
+            msg.channel.createMessage({
+              content: `__Showing last **${suffix}** logs.__`,
               embed: {
                 timestamp: new Date(msg.timestamp),
                 color: 8039393,
                 fields: fieldsArrs[num]
-              }}).catch(() => {})
+              }
+            }).catch(() => { })
           } else {
-            msg.channel.createMessage({embed: {
-              timestamp: new Date(msg.timestamp),
-              color: 8039393,
-              fields: fieldsArrs[num]
-            }}).catch(() => {})
+            msg.channel.createMessage({
+              embed: {
+                timestamp: new Date(msg.timestamp),
+                color: 8039393,
+                fields: fieldsArrs[num]
+              }
+            }).catch(() => { })
           }
         })
       })
+    }
+  }
+}
+
+Commands.diagnose = {
+  name: 'diagnose',
+  desc: 'Check if I have everything I need to operate in a server.',
+  func: function (msg, suffix, bot) {
+    if (checkCanUse(msg.author.id, 'eval')) {
+      let success = []
+      let warning = []
+      let error = []
+      let splitSuffix = suffix.split(' ')
+      let guild = bot.guilds.get(splitSuffix[0]) || bot.guilds.filter(g => g.name.toLowerCase().startsWith(splitSuffix[0]))[0]
+      let channel
+      if (!guild) {
+        let regex = new RegExp(splitSuffix[0], 'gi')
+        guild = bot.guilds.filter(g => regex.test(g.name))[0]
+      }
+      if (guild) {
+        channel = guild.channels.get(splitSuffix[1])
+      }
+      if (!channel && guild) {
+        let regex = new RegExp(splitSuffix[1], 'gi')
+        channel = guild.channels.filter(ch => ch.type === 0).filter(c => regex.test(c.name))[0]
+      }
+      if (!channel) {
+        channel = bot.getChannel(splitSuffix[0])
+      }
+      if (!channel && !guild) {
+        return msg.channel.createMessage(`Nothing found from the given information.`)
+      }
+      if (channel) {
+        let permsBot = channel.permissionsOf(bot.user.id).json
+        diagnosePerms.forEach((perm) => {
+          if (permsBot[perm]) {
+            success.push(`✅ ${perm}`)
+          } else {
+            error.push(`❌ ${perm}`)
+          }
+        })
+      } else if (guild) {
+        let permsBot = guild.members.get(bot.user.id).permission.json
+        diagnosePerms.forEach((perm) => {
+          if (permsBot[perm]) {
+            success.push(`✅ ${perm}`)
+          } else {
+            error.push(`❌ ${perm}`)
+          }
+        })
+      }
+      msg.channel.createMessage({
+        embed: {
+          timestamp: new Date(msg.timestamp),
+          color: 3524914,
+          fields: [{
+            name: 'Diagnosis',
+            value: `Success ${guild ? `**${guild.name}** ` : ''}${channel ? `**${channel.name}**` : ''}:\n${success.join('\n')}\n${error.join('\n')}`
+          }]
+        }
+      }).catch(() => { })
+    } else {
+      msg.channel.createMessage({
+        embed: {
+          timestamp: new Date(msg.timestamp),
+          color: 16208655,
+          fields: [{
+            name: 'Error',
+            value: 'You can\'t use this command!'
+          }]
+        }
+      }).catch(() => { })
     }
   }
 }
@@ -1086,10 +1190,10 @@ Commands.help = {
       }
     })
     cmdList[counter].push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3\nDo you like Logger? Check out my patreon page! https://www.patreon.com/logger`)
-    msg.addReaction('📜').catch(() => {})
+    msg.addReaction('📜').catch(() => { })
     msg.author.getDMChannel().then((DMChannel) => {
       for (let set in cmdList) {
-        DMChannel.createMessage(cmdList[set].join('')).catch(() => {})
+        DMChannel.createMessage(cmdList[set].join('')).catch(() => { })
       }
     })
   }
@@ -1097,7 +1201,7 @@ Commands.help = {
 
 Commands.clearmynames = {
   name: 'clearmynames',
-  desc: 'Completely wipes your stored names from the database',
+  desc: 'Clears your stored names from the database',
   func: function (msg, suffix, bot) {
     let updateUser = require('../handlers/update').updateUserDocument
     msg.channel.createMessage('Are you **absolutely** sure? If so, please type `yes`. If not, this message will delete itself in 5 seconds.').then((cm) => {
