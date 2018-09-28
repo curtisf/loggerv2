@@ -13,7 +13,7 @@ module.exports = {
             let obj = {
                 guildID: guild.id,
                 type: `Member Joined${member.id === '212445217763229699' ? '🛡 Dev' : ''}`,
-                changed: `► Name: **\`${member.username}#${member.discriminator}\` <@${member.id}> (${member.id})\n► Account Age: **${Math.floor((new Date() - member.user.createdAt) / 86400000)}** days\n► Joined At: **${new Date(member.joinedAt).toString().substr(0, 21)}**${member.bot ? '\n► Joined via OAuth invite.' : ''}`,
+                changed: `► Name: **\`${member.username}#${member.discriminator}\` <@${member.id}> (${member.id})\n► Account Age: **${Math.floor((new Date() - member.user.createdAt) / 86400000)}** days\n► Joined At: **${new Date(member.joinedAt).toString().substr(0, 21)}**${member.bot ? '\n► Joined via OAuth invite.' : ''}\n► Member count: **${guild.memberCount}**`,
                 color: 65355,
                 against: member,
                 simple: `**${member.username}#${member.discriminator}** joined the server.`
@@ -25,7 +25,7 @@ module.exports = {
                     obj.changed += `\n ► No stored names for **${member.username}**.`
                 }
             })
-            let lastJoin = `${new Date().getTime()}` // automatic stringify
+            let lastJoin = `${new Date().getTime()}`
             guild.getInvites().then((invites) => {
                 let currentInvites = invites.map((inv) => `${inv.code}|${inv.uses ? inv.uses : 'Infinite'}`)
                 Redis.existsAsync(`${guild.id}:invites`).then((response) => {
@@ -66,7 +66,7 @@ module.exports = {
                                     let code = split[0]
                                     let uses = split[1]
                                     if (!member.bot) {
-                                        obj.changed += `\n► Using Invite: **${code}**, with **${uses}** use(s)`
+                                        obj.changed += `\n► Using Invite: **${code}** with **${uses}** use(s)`
                                     }
                                     Redis.existsAsync(`${guild.id}:lastJoin`).then((res) => {
                                         if (res) {
