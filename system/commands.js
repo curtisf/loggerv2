@@ -136,7 +136,8 @@ Commands.globaleval = {
       process.send({
         op: 'GLOBAL_EVAL',
         c: suffix,
-        shardID: argv.shardid
+        shardID: argv.shardid,
+        requestedID: Math.floor(Math.random() * 100000)
       })
       let responseTimer = setTimeout(() => {
         msg.channel.createMessage('There wasn\'t a response.')

@@ -333,6 +333,7 @@ if (process.send) {
                   c: JSON.stringify(str),
                   shardID: argv.shardid
                 }))
+                return
               }, (e) => {
                 var str = util.inspect(e, {
                   depth: 1
@@ -346,8 +347,14 @@ if (process.send) {
                   c: JSON.stringify(str),
                   shardID: argv.shardid
                 }))
+                return
               })
             }
+            process.send(JSON.stringify({
+              op: 'EVAL_RESPONSE',
+              c: JSON.stringify(str),
+              shardID: argv.shardid
+            }))
           } catch (e) {
             process.send(JSON.stringify({
               op: 'EVAL_RESPONSE',
