@@ -7,9 +7,9 @@ import spawn from 'cross-spawn'
 import { getUserDocument, loadToRedis } from './handlers/read'
 const util = require('util')
 
-process.title = 'Logger v2.5'
-
 let argv = require('minimist')(process.argv.slice(2))
+
+process.title = `Logger v${require('./package.json').version} shard ${argv.shardid ? argv.shardid : 0}`
 
 if (argv.token) {
   log.info(`Shard mode enabled, assigned shard id: ${argv.shardid}`)
@@ -69,7 +69,12 @@ bot.on('disconnect', () => {
 
 bot.on('error', (e) => {
   log.error(`Shard ${argv.token ? argv.shardid : 0} encountered an error!`, e)
-  Raven.captureException(e, {level: 'shardError'})
+  if (e.message.includes('Existing connection')) {
+    require('child_process').execSync(`pkill -f "Logger v${require('./package.json').version} shard ${argv.shardid ? argv.shardid : 0}"`) // If an orphaned shard is serving requests, kill it.
+    process.exit()
+  } else {
+    Raven.captureException(e, {level: 'shardError'})
+  }
 })
 
 function init() {

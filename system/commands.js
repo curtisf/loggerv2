@@ -156,7 +156,7 @@ Commands.globaleval = {
 
 Commands.setchannel = {
   name: 'setchannel',
-  desc: 'This command will let you set one channel to log all events to, or multiple, divided feeds. Usage: \n\n`%setchannel` - Log all actions to the current channel\n\n`%setchannel [server, mod, messages, voice, joinlog]` - Log that preset of actions to the current channel\n\n`%setchannel #channel` - Log all actions to the mentioned channel\n\n`%setchannel #channel [server, mod, messages, voice, joinlog]` - Log that preset of actions to the mentioned channel',
+  desc: 'This command will let you set one channel to log all events to, or multiple, divided feeds. Usage: \n\n`%setchannel` = Log all actions to the current channel\n\n`%setchannel [server, mod, messages, voice, joinlog]`(one at a time) = Log that preset of actions to the current channel\n\n`%setchannel #channel` = Log all actions to the mentioned channel\n\n`%setchannel #channel [server, mod, messages, voice, joinlog]`(one at a time) = Log that preset of actions to the mentioned channel',
   func: function (msg, suffix, bot) {
     let allowed = checkIfAllowed(msg)
     let botPerms = msg.channel.guild.members.get(bot.user.id).permission.json
@@ -480,7 +480,7 @@ Commands.ignorechannel = {
 
 Commands.togglemodule = {
   name: 'togglemodule',
-  desc: `Use this with a valid module name to toggle a module on or off! All modules except voice are automatically enabled. Valid modules are: \`\`\`xl\n${(events.concat(['all'])).join(', ')}\`\`\``,
+  desc: `Use this with a valid module name to toggle a module on or off! All modules except voice are automatically enabled. Valid modules are: \n[${(events.join(', '))}]`,
   func: function (msg, suffix, bot) {
     let allowed = checkIfAllowed(msg)
     let getGuildDocument = require('../handlers/read').getGuildDocument // to avoid exposing globally
@@ -656,7 +656,7 @@ Commands.invite = {
   func: function (msg, suffix, bot) {
     msg.channel.createMessage({
       embed: {
-        description: `<@${msg.author.id}>, Invite me using [this](https://discordapp.com/oauth2/authorize?client_id=298822483060981760&scope=bot&permissions=380065). Configure me using [the dashboard](https://whatezlife.com)`,
+        description: `<@${msg.author.id}>, Invite me using [this](https://discordapp.com/oauth2/authorize?client_id=${bot.user.id}&scope=bot&permissions=380065). Configure me using [the dashboard](https://whatezlife.com)`,
         color: 8351671
       }
     }).catch(() => { })
@@ -1170,26 +1170,30 @@ Commands.help = {
   desc: 'Provides help with the bot\'s functionality',
   func: function (msg, suffix, bot) {
     let cmdList = {
-      0: [`__Help for Logger__\n\n`]
+      0: [`__Help for Logger__\n\n\`\`\`ini\n`]
     }
     let counter = 0
-    Object.keys(Commands).forEach((cmd) => {
+    let cmdKeys = Object.keys(Commands)
+    cmdKeys.forEach((cmd, i) => {
       if (!Commands[cmd].hasOwnProperty('hidden')) {
         if (cmdList[counter].join('\n').length > 1750) {
+          cmdList[counter].push('```')
           counter++
           cmdList[counter] = []
+          cmdList[counter].push('```ini\n')
         } else {
-          cmdList[counter].push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
+          cmdList[counter].push(`${Commands[cmd].name} = "${Commands[cmd].desc}"\n\n`)
         }
       } else if (checkCanUse(msg.author.id, 'eval')) {
         if (cmdList[counter].join('\n').length > 1750) {
           counter++
           cmdList[counter] = []
         } else {
-          cmdList[counter].push(`**${Commands[cmd].name}**: ${Commands[cmd].desc}\n`)
+          cmdList[counter].push(`${Commands[cmd].name} = "${Commands[cmd].desc}"\n\n`)
         }
       }
     })
+    cmdList[counter].push('```')
     cmdList[counter].push(`\nNeed an easier way to manage your bot? Check out https://whatezlife.com/\nHave any questions or bugs? Feel free to join my home server and ask!\nhttps://discord.gg/ed7Gaa3\nDo you like Logger? Check out my patreon page! https://www.patreon.com/logger`)
     msg.addReaction('📜').catch(() => { })
     msg.author.getDMChannel().then((DMChannel) => {

@@ -1,18 +1,19 @@
 {
   "name": "logger",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "A simple Discord bot for logging different events in your Discord server.",
   "scripts": {
     "start": "babel-node Logger.js",
     "test": "standard && eslint **",
-    "build": "babel . --ignore doc,rethinkdb_data,node_modules,dump.rdb,README.md --out-dir dist --copy-files"
+    "build": "babel . --ignore doc,rethinkdb_data,node_modules,dump.rdb,README.md --out-dir dist --copy-files",
+    "build-linux": "rm -rf dist/ -R && babel . --ignore doc,rethinkdb_data,node_modules,dump.rdb,README.md --out-dir dist --copy-files"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LWTechGaming/Logger.git"
+    "url": "git+https://github.com/caf203/loggerv2.git"
   },
-  "author": "DevLodge",
+  "author": "Curtis Fowler",
   "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/LWTechGaming/Logger/issues"
