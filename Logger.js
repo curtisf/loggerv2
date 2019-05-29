@@ -70,8 +70,7 @@ bot.on('disconnect', () => {
 bot.on('error', (e) => {
   log.error(`Shard ${argv.token ? argv.shardid : 0} encountered an error!`, e)
   if (e.message.includes('Existing connection')) {
-    require('child_process').execSync(`pkill -f "Logger v${require('./package.json').version} shard ${argv.shardid ? argv.shardid : 0}"`) // If an orphaned shard is serving requests, kill it.
-    process.exit()
+    // ok I'm done with dealing with this
   } else {
     Raven.captureException(e, {level: 'shardError'})
   }
